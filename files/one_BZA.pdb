@@ -1,0 +1,22 @@
+TITLE     Benzyl alcohol
+REMARK    THIS IS A SIMULATION BOX
+CRYST1  100.000  100.000  100.000  90.00  90.00  90.00 P 1           1
+MODEL        1
+HETATM    1  O1  UNK     0      48.060  51.898  50.000  1.00  0.00           O
+HETATM    2  C1  UNK     0      49.440  51.898  50.000  1.00  0.00           C
+HETATM    3  C2  UNK     0      49.940  50.484  50.000  1.00  0.00           C
+HETATM    4  C3  UNK     0      50.172  49.829  51.204  1.00  0.00           C
+HETATM    5  C4  UNK     0      50.635  48.518  51.204  1.00  0.00           C
+HETATM    6  C5  UNK     0      50.867  47.863  50.000  1.00  0.00           C
+HETATM    7  C6  UNK     0      50.635  48.518  48.796  1.00  0.00           C
+HETATM    8  C7  UNK     0      50.172  49.829  48.796  1.00  0.00           C
+HETATM    9  H1  UNK     0      47.637  52.804  50.000  1.00  0.00           H
+HETATM   10  H2  UNK     0      49.803  52.412  49.110  1.00  0.00           H
+HETATM   11  H3  UNK     0      49.803  52.412  50.890  1.00  0.00           H
+HETATM   12  H4  UNK     0      49.991  50.339  52.141  1.00  0.00           H
+HETATM   13  H5  UNK     0      50.815  48.008  52.141  1.00  0.00           H
+HETATM   14  H6  UNK     0      51.227  46.843  50.000  1.00  0.00           H
+HETATM   15  H7  UNK     0      50.815  48.008  47.859  1.00  0.00           H
+HETATM   16  H8  UNK     0      49.991  50.339  47.859  1.00  0.00           H
+TER
+ENDMDL

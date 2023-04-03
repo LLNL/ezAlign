@@ -1,0 +1,82 @@
+; RUN CONTROL PARAMETERS
+integrator               = steep
+define                   = -DPOSRES
+; Start time and timestep in ps
+tinit                    = 0
+nsteps                   = 300
+; mode for center of mass motion removal
+comm-mode                = Linear
+; number of steps for center of mass motion removal
+nstcomm                  = 100
+; group(s) for center of mass motion removal
+comm-grps                = 
+
+; ENERGY MINIMIZATION OPTIONS
+; Force tolerance and initial step-size
+emtol                    = 10
+emstep                   = 0.01
+; Max number of iterations in relax-shells
+niter                    = 20
+; Step size (ps^2) for minimization of flexible constraints
+fcstep                   = 0
+; Frequency of steepest descents steps when doing CG
+nstcgsteep               = 1000
+nbfgscorr                = 10
+
+; OUTPUT CONTROL OPTIONS
+; Output frequency for coords (x), velocities (v) and forces (f)
+nstxout                  = 0
+nstvout                  = 0
+nstfout                  = 0
+; Output frequency for energies to log file and energy file
+nstlog                   = 1000
+nstcalcenergy            = 100
+nstenergy                = 100
+; Output frequency and precision for .xtc file
+nstxout-compressed       = 1000
+compressed-x-precision   = 100
+
+; NEIGHBORSEARCHING PARAMETERS
+; cut-off scheme (Verlet: particle based cut-offs, group: using charge groups)
+cutoff-scheme            = Verlet
+; nblist update frequency
+nstlist                  = 20
+; ns algorithm (simple or grid)
+ns_type                  = grid
+; Periodic boundary conditions: xyz, no, xy
+pbc                      = xyz
+periodic-molecules       = no
+; Allowed energy error due to the Verlet buffer in kJ/mol/ps per atom,
+; a value of -1 means: use rlist
+verlet-buffer-tolerance  = 0.005
+; nblist cut-off        
+rlist                    = 1.5
+
+; OPTIONS FOR ELECTROSTATICS AND VDW
+; Method for doing electrostatics
+coulombtype              = cut-off
+;coulomb-modifier         = Potential-shift-Verlet
+;rcoulomb-switch          = 0
+rcoulomb                 = 0.8
+; Method for doing Van der Waals
+vdw_type                 = cutoff
+;vdw-modifier             = Potential-shift-verlet
+; cut-off lengths       
+;rvdw-switch              = 0
+rvdw                     = 0.8
+; Apply long range dispersion corrections for Energy and Pressure
+DispCorr                 = No
+
+; OPTIONS FOR BONDS    
+constraints              = none
+
+; Free energy variables
+free-energy              = yes
+couple-moltype           = System
+couple-lambda0           = vdw-q
+couple-lambda1           = none
+couple-intramol          = no
+init-lambda              = 1
+delta-lambda             = 0
+nstdhdl                  = 50
+

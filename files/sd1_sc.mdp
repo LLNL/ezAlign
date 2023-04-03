@@ -1,0 +1,56 @@
+define                  = -DPOSRES
+integrator              = sd
+dt                      = 0.0001
+nsteps                  = 100
+nstlog                  = 5000
+nstxout                 = 0
+nstvout                 = 0
+nstfout                 = 0
+nstxtcout               = 500
+nstcalcenergy           = 1000
+nstenergy               = 1000
+;
+cutoff-scheme           = Verlet
+nstlist                 = 20
+rlist                   = 0.5
+coulombtype             = Cut-off
+rcoulomb                = 0.5
+vdwtype                 = Cut-off
+;vdw-modifier            = Force-switch
+;rvdw_switch             = 0.8
+rvdw                    = 0.5
+;
+tcoupl                  = Yes
+tc_grps                 = System
+tau_t                   = 1.0
+ref_t                   = 300
+;
+pcoupl                  = No
+pcoupltype              = semiisotropic
+tau_p                   = 5.0
+compressibility         = 4.5e-5  4.5e-5
+ref_p                   = 1.0     1.0
+;
+constraints             = none
+constraint_algorithm    = LINCS
+continuation            = no
+gen-vel                  = yes
+gen-temp                 = 300
+gen-seed                 = -1
+
+nstcomm                 = 100
+comm_mode               = linear
+;comm_grps               = MEMB   SOL_ION
+;
+refcoord_scaling        = com
+
+; Free energy variables
+free-energy              = yes
+couple-moltype           = system
+couple-intramol          = yes
+couple-lambda0           = vdw
+couple-lambda1           = none
+init-lambda              = 1
+delta-lambda             = -0.01
+sc-alpha                 = 1E-2
+

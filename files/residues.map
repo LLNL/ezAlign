@@ -1,0 +1,87 @@
+#####   Formatting   #####
+
+#   CG_resname  AT_resname
+#   AT_ind1 AT_ind2 AT_ind3 ...
+
+# NOTE: AT_ind# starts at 1, not 0
+# NOTE: cmd-line specified mappings take precedence
+# NOTE: Earliest mapping takes precedence
+
+
+#####   Mappings   #####
+
+POPC POPC
+1 20 31 40 51 60 76 88 95 107 119 131
+
+#####   AMBER lipids   #####
+
+# POPC aPOPC
+# 67 59 82 49 89 100 113 131 38 29 17 1
+
+#####   Mix8   #####
+
+# POPX POPC
+# 1 20 31 40 51 60 76 88 95 107 119 131
+
+PAP6 SAPI
+28 5 16 30 12 19 41 50 58 68 77 86 95 105 117 123 138
+
+PAPC SAPC
+1 20 31 40 51 60 69 79 85 98 110 122 134
+
+DPSM PSM
+1 20 36 80 46 58 70 91 103 115 121
+
+DIPE SAPE
+1 11 27 22 83 95 107 122 39 51 63 73
+
+PAPS SAPS
+5 13 29 24 35 94 106 118 127 41 51 60 69
+
+#####   Other   #####
+
+DPPC DPPC
+12 20 40 31 91 103 115 127 51 63 77 84
+
+CHOL CHOL
+2 40 31 41 21 27 59 71
+
+POPE POPE
+1 11 21 30 42 56 67 79 86 98 113 122
+
+POPS POPS
+1 20 31 40 51 60 76 88 95 107 119 127
+
+POPG POPG
+1 13 23 32 41 56 69 81 88 100 112 124
+
+# DOPE DOPE
+# 1 14 31 22 38 51 65 79 95 107 115 126
+
+DMPG AMPG
+6 13 31 24 44 54 71 81 93 111
+
+DMLP ALPG
+25 36 46 55 67 79 134 64 76 88 23 10 19
+
+TMCL ADPG
+28 21 46 54 63 84 91 102 114 133 36 11 4 143 155 173 189 198 218
+
+# oleate
+OLN OLE
+3 13 25 35 47
+
+# oleic acid
+OLA OLEP
+4 14 26 36 48
+
+#####   Surfactants   #####
+BZA BZA
+7 5 2
+
+CTBE ctbe
+34 49 46 42 35
+
+ISAR lsar
+32 34 42 45 36
+

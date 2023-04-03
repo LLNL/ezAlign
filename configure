@@ -1,0 +1,10 @@
+#!/bin/bash
+RELPATH=$(dirname $0)
+ABSPATH=$(cd $RELPATH && pwd)
+LINE1="export EZALIGN_BASE=$ABSPATH"
+LINE2="export PATH=\$EZALIGN_BASE:\$PATH"
+BUFF=$LINE1$'\n'$LINE2
+echo "$BUFF" > EZRC.bash
+echo $'\n'"Include"$'\n\n'\
+"source $ABSPATH/EZRC.bash"$'\n\n'\
+"in your ~/.bashrc and open a new terminal."$'\n'
