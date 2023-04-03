@@ -54,4 +54,6 @@ which maps the single martini CG bead to the central carbon (C3) of atomistic bu
 3. Jo, S., Cheng, X., Lee, J., Kim, S., Park, S. J., Patel, D. S., ... & Im, W. (2017). CHARMM‐GUI 10 years for biomolecular modeling and simulation. Journal of computational chemistry, 38(15), 1114-1124.
 
 ## License
-ezAlign is distributed under the GNU General Public License (GPL) v2.0 license. The LLNL release number is LLNL-CODE-846696.
+ezAlign is distributed under the GNU General Public License (GPL) v2.0 license. 
+
+LLNL-CODE-846696
