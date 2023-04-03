@@ -6,6 +6,7 @@ ezAlign takes coarse grain (CG) coordinate and topology files and converts and o
 Independent atomistic coordinates and topologies for every molecule must already be included in `ezAlign/files`.  A number of commonly simulated biological molecules are currently provided.  For instructions on including additional molecules, see the Parameterization section.
 
 ## Requirements
+* Linux OS
 * Python 3.x
 * MDAnalysis 2.x.x or greater
 * numpy 1.20.x or greater
