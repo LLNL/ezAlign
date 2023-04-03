@@ -12,9 +12,6 @@ Independent atomistic coordinates and topologies for every molecule must already
 * numpy 1.20.x or greater
 * GROMACS 5.x
 
-## License
-GNU General Public License (GPL) v2.0
-
 ## Installation
 1. Clone or download ezAlign
 2. Execute `./configure`
@@ -55,3 +52,6 @@ which maps the single martini CG bead to the central carbon (C3) of atomistic bu
 1. Bennett, W. F. D., Bernardi, A., Fox, S. J., Sun, D., & Maupin, C. M. (2022) Converting Coarse Grained Molecular Dynamics Structures to Atomistic Resolution for Multiscale Modelling (in prep.)
 2. Abraham, M. J., Murtola, T., Schulz, R., Páll, S., Smith, J. C., Hess, B., & Lindahl, E. (2015). GROMACS: High performance molecular simulations through multi-level parallelism from laptops to supercomputers. SoftwareX, 1, 19-25.
 3. Jo, S., Cheng, X., Lee, J., Kim, S., Park, S. J., Patel, D. S., ... & Im, W. (2017). CHARMM‐GUI 10 years for biomolecular modeling and simulation. Journal of computational chemistry, 38(15), 1114-1124.
+
+## License
+ezAlign is distributed under the GNU General Public License (GPL) v2.0 license. The LLNL release number is LLNL-CODE-846696.
