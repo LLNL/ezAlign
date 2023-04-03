@@ -3,7 +3,7 @@ Coarse grain to atomistic molecular coordinate and topology converter for molecu
 ## Description
 ezAlign takes coarse grain (CG) coordinate and topology files and converts and outputs their corresponding atomistic formats using an alignment and relaxation procedure outline in reference [1].  ezAlign is designed to convert complex, solvated biological systems including lipid membranes with drug-like molecules using GROMACS [2]. A GROMACS checkpoint (.cpt) file is also outputted to enable continuation simulations that retain the equilibrated atomic velocities.  Note that ezAlign specifically requires GROMACS 5.x, and other versions are likely incompatible.
 
-Independent atomistic coordinates and topologies for every molecule must already be included in `ezAlign/files`.  A number of commonly simulated biological molecules are currently provided.  For instructions on including additional molecules, see the Parameterization section.
+Independent atomistic coordinates and topologies for every molecule must already be included in `ezAlign/files`.  A number of commonly simulated biological molecules are currently provided.  For instructions on including additional molecules, see the parameterization section.
 
 ## Requirements
 * Linux OS
