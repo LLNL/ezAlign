@@ -51,6 +51,6 @@ BOL BOL
 which maps the single martini CG bead to the central carbon (C3) of atomistic butanol.
 
 ## References
-1. Bennett, W. F. D., Fox, S. J., Bernardi, A., Sun, D., & Maupin, C. M. (2022) Converting Coarse Grained Molecular Dynamics Structures to Atomistic Resolution for Multiscale Modelling (in prep.)
+1. Bennett, W. F. D., Bernardi, A., Fox, S. J., Sun, D., & Maupin, C. M. (2022) Converting Coarse Grained Molecular Dynamics Structures to Atomistic Resolution for Multiscale Modelling (in prep.)
 2. Abraham, M. J., Murtola, T., Schulz, R., Páll, S., Smith, J. C., Hess, B., & Lindahl, E. (2015). GROMACS: High performance molecular simulations through multi-level parallelism from laptops to supercomputers. SoftwareX, 1, 19-25.
 3. Jo, S., Cheng, X., Lee, J., Kim, S., Park, S. J., Patel, D. S., ... & Im, W. (2017). CHARMM‐GUI 10 years for biomolecular modeling and simulation. Journal of computational chemistry, 38(15), 1114-1124.
