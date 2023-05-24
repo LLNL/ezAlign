@@ -38,7 +38,7 @@ Including parameters for new molecules in ezAlign is fairly straightforward usin
 7. Click "Next Step: Generate PDB" in the bottom right of the page and wait.
 8. Click "download.tgz" in the top right corner.
 9. Extract charmm-gui.tgz.
-10. Copy charmm-gui/ligandrm.pdb to $EZALIGN_BASE/files/BOL.pdb
+10. Copy charmm-gui/ligandrm.pdb to $EZALIGN_BASE/files/one_BOL.pdb
 11. Copy charmm-gui/gromacs/BOL.itp to $EZALIGN_BASE/files/BOL.itp
 12. Modify $EZALIGN_BASE/files/residues.map to contain a CG bead to AA atom mapping for butanol.  For butanol this may look like
 ```
