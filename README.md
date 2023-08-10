@@ -1,7 +1,7 @@
 # ezAlign
 Coarse grain to atomistic molecular coordinate and topology converter for molecular dynamics simulations.
 ## Description
-ezAlign takes coarse grain (CG) coordinate and topology files and converts and outputs their corresponding atomistic formats using an alignment and relaxation procedure outline in reference [1].  ezAlign is designed to convert complex, solvated biological systems including lipid membranes with drug-like molecules using GROMACS [2]. A GROMACS checkpoint (.cpt) file is also outputted to enable continuation simulations that retain the equilibrated atomic velocities.  Note that ezAlign specifically requires GROMACS 5.x, and other versions are likely incompatible.
+ezAlign takes coarse grain (CG) coordinate and topology files and converts and outputs their corresponding atomistic formats using an alignment and relaxation procedure outlined in reference [1].  ezAlign is designed to convert complex, solvated biological systems including lipid membranes with drug-like molecules using GROMACS [2]. A GROMACS checkpoint (.cpt) file is also outputted to enable continuation simulations that retain the equilibrated atomic velocities.  Note that ezAlign specifically requires GROMACS 5.x, and other versions are likely incompatible.
 
 Independent atomistic coordinates and topologies for every molecule must already be included in `ezAlign/files`.  Single molecule coordinate, topology, and mapping may also be specified during execution using the appropriate command-line options.  A number of commonly simulated biological molecules are currently provided.  For instructions on including additional molecules, see the parameterization section.
 
@@ -38,7 +38,7 @@ Including parameters for new molecules in ezAlign is fairly straightforward usin
 7. Click "Next Step: Generate PDB" in the bottom right of the page and wait.
 8. Click "download.tgz" in the top right corner.
 9. Extract charmm-gui.tgz.
-10. Copy charmm-gui/ligandrm.pdb to $EZALIGN_BASE/files/BOL.pdb
+10. Copy charmm-gui/ligandrm.pdb to $EZALIGN_BASE/files/one_BOL.pdb
 11. Copy charmm-gui/gromacs/BOL.itp to $EZALIGN_BASE/files/BOL.itp
 12. Modify $EZALIGN_BASE/files/residues.map to contain a CG bead to AA atom mapping for butanol.  For butanol this may look like
 ```
