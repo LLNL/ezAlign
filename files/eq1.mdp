@@ -10,7 +10,7 @@ nstxtcout               = 50
 nstcalcenergy           = 1000
 nstenergy               = 1000
 ;
-cutoff-scheme           = Group
+cutoff-scheme           = Verlet
 nstlist                 = 20
 rlist                   = 1.2
 coulombtype             = pme

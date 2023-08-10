@@ -1,6 +1,5 @@
 #include "./files/charmm36-jul2017.ff/forcefield.itp"
 #include "./files/charmm_other.prm"
-
 #include "./files/charmm36-jul2017.ff/tip3p.itp"
 #include "./files/charmm36-jul2017.ff/ions.itp"
 

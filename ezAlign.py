@@ -8,20 +8,28 @@ import re
 import sys
 import warnings
 from sys import argv
-import numpy
+import numpy as np
 import MDAnalysis as mda
 from MDAnalysis.analysis import align
 from MDAnalysis.analysis.rms import rmsd
 import argparse
 from collections import OrderedDict
 
+PDBFMTSTR='ATOM  {!s:>5.5} {:>4s} {:>3s} X{!s:>4.4}    {:>8.3f}{:>8.3f}{:>8.3f}                          \n'
+
 # calls the gromacs executable and errors if it failed
-def call_gromacs(args,line,prefix=''):
+# nt allows custom arg.cex -n for debugging
+def call_gromacs(args,line,prefix='',nt=None):
 	if line[0:5] == 'mdrun':
 		if args.cex != '':
-			line = args.cex + ' ' + args.gex + ' ' + line
+			pre = args.cex
+			if nt is not None:
+				pre += ' -n ' + str(nt)
+			line = pre + ' ' + args.gex + ' ' + line
 		else:
 			line = args.gex + ' ' + line
+		if args.suff != '':
+			line = line + args.suff
 		if args.threads != '0':
 			line += ' -nt ' + args.threads
 	else:
@@ -117,7 +125,7 @@ def write_pos_restraints(resmap,BaseDir,args):
 		myfile.write(buff)		
 
 # writes required itp files to include using aa_resnames
-# into topology file filename
+# and args.pi into topology file filename
 def include_itps(filename,aa_resnames,BaseDir,args):
 	with open(filename,'r') as myfile:
 		buff = myfile.read()
@@ -133,13 +141,173 @@ def include_itps(filename,aa_resnames,BaseDir,args):
 		else:
 			line = "#include \"{:s}/files/{:s}.itp\"\n".format(BaseDir,aa_resname)
 		itp_bufflist.append(line)
-	j = buff.index("charmm_other.prm")
-	j = buff.index('\n',j)
-	bufflist = ([buff[:j+1]] + itp_bufflist +
-		[buff[j+2:]])
+	if args.pi is not None:
+		line = "#include \"{:s}\"\n".format(args.pi)
+		itp_bufflist.append(line)
+	j = 0
+	while buff[j].startswith('#') or buff[j].startswith(';'):
+		j = buff.index('\n',j) + 1
+	bufflist = ([buff[:j]] + itp_bufflist +
+		[buff[j:]])
 	buff = ''.join(bufflist)
 	with open(filename,'w') as myfile:
 		myfile.write(buff)
+
+# Returns the molecule name of .itp filename
+def get_molname(filename):
+	with open(filename,'r') as myfile:
+		buff = myfile.read()
+	j = buff.index("[ moleculetype ]")
+	j = buff.index('\n',j) + 1
+	while(buff[j][0] == ';'):
+		j = buff.index('\n',j) + 1
+	k = buff.index('\n',j)
+	line = buff[j:k]
+	fields = re.split('[ \t]+',line)
+	return fields[0]
+	
+# Writes the full topology to aa.top from aa_lipid.top
+def write_full_top(args,prot_molname,num_water,num_NA,num_CL):
+	with open('aa_lipid.top','r') as myfile:
+		buff = myfile.read()
+	j = 0
+	k = buff.index('\n',j) + 1
+	while buff[j:k].startswith("#") or buff[j:k].startswith(';'):
+		j = k
+		k = buff.index('\n',j)+1
+	buff_list = [buff[:j]]
+	buff_list.append(buff[j:])
+	if args.pi is not None:
+		buff_list.append("{:s}         1\n".format(prot_molname))
+	buff_list.append("SOL    %d\n NA    %d\n CL     %d\n" % (num_water, num_NA, num_CL))
+	with open('aa.top','w') as myfile:
+		myfile.write(''.join(buff_list))
+
+# Returns an mdanalysis CA atomgroup that is protein-like:
+# only residues that have atom names CA, N, and C
+def get_aa_CA(aa_protein_template):
+	sels = []
+	sels.append(aa_protein_template.select_atoms('name CA'))
+	sels.append(aa_protein_template.select_atoms('name N'))
+	sels.append(aa_protein_template.select_atoms('name C'))
+	nsels = len(sels)
+	resids = np.zeros(nsels,dtype=int)
+	numsels = np.zeros(nsels,dtype=int)
+	for j in range(nsels):
+		resids[j] = sels[j].resids[0]
+		numsels[j] = sels[j].positions.shape[0]
+	resgroup = []
+	selinds = np.zeros((nsels),dtype=int)
+	while True:
+		if np.all(resids == resids[0]):
+			resgroup.append('resid {:d}'.format(
+				resids[0]))
+			selinds += 1
+		else:
+			selinds[np.argmin(resids)] += 1
+		if not (np.all(selinds < numsels)):
+			break
+		for j in range(nsels):
+			resids[j] = sels[j].resids[selinds[j]]
+	return aa_protein_template.select_atoms('name CA and (' +
+		' or '.join(resgroup) + ')')
+
+# Writes protein position restraints for relaxation according 
+# to AA and CG names from amino_map.py.  Also writes .itp and pdbs.
+def write_prot_posres(aa_ca_sel,cg_bb_sel,aa_template,cg_template):
+	from files.amino_map import amino_map
+	posres_bufflist = ['\n#ifdef POSRES_PROT\n',
+		'[ position_restraints ]\n',
+		'; ai  funct  fcx    fcy    fcz\n']
+	pdb_bufflist = []
+	aa_ref_ixs = []
+	cg_ref_ixs = []
+	for j in range(aa_ca_sel.n_atoms):
+		resname = aa_ca_sel[j].resname
+		atname_map = amino_map[resname]
+		for aa_name in atname_map:
+			cg_name = atname_map[aa_name]
+			aa_index = get_index(aa_name,j,aa_ca_sel,
+				aa_template)
+			cg_index = get_index(cg_name,j,cg_bb_sel,
+				cg_template)
+			aa_ref_ixs.append(aa_index)
+			cg_ref_ixs.append(cg_index)
+	zipped = list(zip(aa_ref_ixs,cg_ref_ixs))
+	sortedzip = sorted(zipped,key=lambda x: x[0])
+	aa_ref_ixs, cg_ref_ixs = zip(*sortedzip)
+	k = 0
+	N_k = len(aa_ref_ixs)
+	f_const = 1000 #kj/mol/nm**2
+	n_atoms = len(aa_template.atoms)
+	for j in range(n_atoms):
+		cur_ix = aa_template.atoms[j].ix
+		resname = aa_template.atoms[j].resname
+		name = aa_template.atoms[j].name
+		resid = aa_template.atoms[j].resid
+		if k < N_k and cur_ix == aa_ref_ixs[k]:
+			cg_pos = cg_template.atoms[cg_ref_ixs[k]].position
+			pdb_bufflist.append(PDBFMTSTR.format(
+				cur_ix+1,name,resname,
+				resid,*cg_pos))
+			posres_bufflist.append('{:>10d} 1 {:>10d} {:>10d} {:>10d}\n'.format(
+				cur_ix+1,f_const,f_const,f_const))
+			k += 1
+		else:
+			pdb_bufflist.append(PDBFMTSTR.format(
+				cur_ix+1,name,resname,
+				resid,0,0,0))
+	posres_bufflist.append('#endif\n')
+	with open('aa_prot.itp','a') as myfile:
+		myfile.write(''.join(posres_bufflist))
+	with open('posres_prot.pdb','w') as myfile:
+		myfile.write(''.join(pdb_bufflist))
+
+# Returns index for name using ref_sel[j]
+# such that index is within the same residue
+def get_index(name,j,ref_sel,template):
+	resid = ref_sel.resids[j]
+	ref_ix = ref_sel[j].ix
+	cur_ix = ref_ix
+	while True:
+		cur_name = template.atoms[cur_ix].name
+		cur_resid = template.atoms[cur_ix].resid
+		if cur_resid != resid:
+			break
+		if cur_name == name:
+			return cur_ix
+		cur_ix += 1
+	cur_ix = ref_ix-1
+	while True:
+		cur_name = template.atoms[cur_ix].name
+		cur_resid = template.atoms[cur_ix].resid
+		if cur_resid != resid:
+			print('\nERROR: unmappable atom name "{:s}" in residue "{:d}, resname {:s}".\n'.format(
+				name,resid,
+				template.atoms[ref_ix].resname))
+			assert(0)
+		if cur_name == name:
+			return cur_ix
+		cur_ix -= 1
+
+# Appends prot_molname to aa_prot.top
+def write_prot_top(prot_molname):
+	with open('aa_lipid.top','r') as myfile:
+		buff = myfile.read()
+	j = buff.index('[ molecules ]')
+	j = buff.index('\n',j)+1
+	with open('aa_prot.top','w') as myfile:
+		myfile.write(buff[:j] +
+			"{:s}      1".format(prot_molname))
+	
+# Returns the number of steric clashes
+# in coordinate file filename
+def get_contacts(filename):
+	u = mda.Universe(filename,in_memory=True)
+	badContacts = mda.lib.distances.self_capped_distance(
+		u.atoms.positions, max_cutoff=0.7, min_cutoff=0,
+		 box=u.dimensions, return_distances=False)
+	return len(badContacts)
 
 def init():
 	parser=argparse.ArgumentParser(prog="ezAlign",
@@ -151,16 +319,23 @@ def init():
 	parser.add_argument("-m",default=None,help="Additional residue mappings file.  Must follow same format as $EZALIGN_BASE/files/residues.map.  Does not support relative paths outside the working directory.")
 	parser.add_argument("-d",default=None,help="PDB file of single molecule for molecules not included in $EZALIGN_BASE/files. Should be named \"one_RESNAME.pdb\".  Does not support relative paths outside the working directory.")
 	parser.add_argument("-t",default=None,help="ITP file of single molecule for molecules not included in $EZALIGN_BASE/files. Should be named \"RESNAME.itp\".  Does not support relative paths outside the working directory.")
+	parser.add_argument("-pp",default=None,help="PDB file of a protein and associated residues contained in the system. Protein must be listed after lipids and small molecules but before water/ions.")
+	parser.add_argument("-pi",default=None,help="ITP file of a protein and associated residues contained in the system.")
+	parser.add_argument("-tt",default=None,help="Custom template topology file for atomistic simulations. If specified, this is used in place of \"$EZALIGN_BASE/files/aa_lipid.top.template\". Useful when working with custom forcefields.  This will still automatically include relevant .itps from \"$EZALIGN_BASE/files\".")
 	parser.add_argument("-o", default='ezAligned',help="Base name of equilibrated output files (.pdb, .cpt, .top).")
 	parser.add_argument("-nt","--threads",default="0",help="Number of thread-MPI threads for gromacs mdrun. NOTE: do not specify if using regular MPI. If zero then the parameter is unspecified, and GROMACS uses its default configuration.")
 	parser.add_argument("-gex",default="gmx",help="GROMACS executable")
 	parser.add_argument("-cex",default='',help="Cluster scheduler executable (eg. srun). Prefixes gromacs mdrun commands.")
+	parser.add_argument("-suff",default='',help="Suffix to provide gmx mdrun commands (eg. \"-nb gpu\").")
 	parser.add_argument("--keep",action='store_true',help="For debugging purposes.  Retains the ezAlign working directory '.ezAlign'.")
 	args=parser.parse_args()
 
 	if "EZALIGN_BASE" not in os.environ:
 		print('ERROR: Environment variable $EZALIGN_BASE must specify the ezAlign base directory. Hint: on a system running bash, execute ./configure and follow the instructions.')
 		exit(2)
+
+	if args.suff != '' and not args.suff.startswith(' '):
+		args.suff = ' ' + args.suff
 
 	if(args.pdbfile=="input_CG.pdb"):
 		print("Using default CG pdb...")
@@ -172,9 +347,11 @@ def init():
 
 def ezAlign(args):
 	RunDir = ".ezAlign"
+	
 	if os.path.isdir(RunDir):
 		shutil.rmtree(RunDir)
 	os.mkdir(RunDir)
+	
 	shutil.copy(args.pdbfile,RunDir + '/' + "input_CG.pdb")
 	shutil.copy(args.topfile,RunDir + '/' + "cg.top")
 	if args.m is not None:
@@ -183,14 +360,24 @@ def ezAlign(args):
 		shutil.copy(args.d,RunDir)
 	if args.t is not None:
 		shutil.copy(args.t,RunDir)
+	if args.pi is not None:
+		shutil.copy(args.pi,RunDir)
+		prot_molname = get_molname(args.pi)
+	if args.pp is not None:
+		shutil.copy(args.pp,RunDir)
+	if args.tt is not None:
+		shutil.copy(args.tt,RunDir+'/'+"aa_lipid.top")
+
 	os.chdir(RunDir)
 	args.pdbfile = "input_CG.pdb"
 	args.topfile = "cg.top"
 
-	all_CG = mda.Universe(args.pdbfile,in_memory=True)
 	BaseDir = os.environ["EZALIGN_BASE"]
 	nt=args.threads
 	input_top=args.topfile
+	
+	all_CG = mda.Universe(args.pdbfile,in_memory=True)
+	
 	lipids = get_residue_maps(BaseDir,args)
 	for resmap in lipids.values():
 		write_pos_restraints(resmap,BaseDir,args)
@@ -208,10 +395,13 @@ def ezAlign(args):
 	####################################################
 	###### Write top files and other files set-up  #####
 	####################################################
-
-	os.system("cp "+BaseDir+"/files/aa_lipid.top.template aa_lipid.top")
+	
+	if args.tt is None:
+		os.system("cp "+BaseDir+"/files/aa_lipid.top.template aa_lipid.top")
 
 	include_itps("aa_lipid.top",aa_resnames,BaseDir,args)
+	os.system("sed -i 's|\"./files|\""+BaseDir+"/files|g' aa_lipid.top")
+	
 	fin_top=open(input_top,"r")
 	fout=open("aa_lipid.top","a")
 	start_read = 0
@@ -227,18 +417,19 @@ def ezAlign(args):
 					data[0]!="NA+" and data[0]!="Na+" and 
 					data[0]!="CL" and data[0]!="Cl" and 
 					data[0]!="CL-" and data[0]!="Cl-"):
-					fout.write(line)
+					if args.pi is None:
+						fout.write(line)
+					elif data[0]!=prot_molname:
+						fout.write(line)
 	fout.write("\n")
 	fout.close()
 	fin_top.close()
-
-	os.system("sed -i 's|\"./files|\""+BaseDir+"/files|g' aa_lipid.top")
 
 	sed_resnames(lipids,"aa_lipid.top")
 
 	subprocess.call("cat "+args.pdbfile+" | grep CRYST > lipid.pdb",shell=True)
 	subprocess.call("cat "+args.pdbfile+" | grep CRYST > lipid_pos.pdb",shell=True)
-
+	
 	try:
 		OF = open("log.dat", 'w')
 		OFlipid = open("lipid.pdb", 'a')
@@ -291,8 +482,13 @@ def ezAlign(args):
 		template_POS.atoms.positions = cross_AA
 		i = 0
 		for i in range(len(template_POS.atoms.positions)):
-			OFlipid.write("ATOM  %6d CH  LIP     4    %8.3f%8.3f%8.3f  1.00  0.00\n" % (k, old_pos[i][0], old_pos[i][1], old_pos[i][2]))
-			OFlipidPos.write("ATOM  %6d CH  LIP     4    %8.3f%8.3f%8.3f  1.00  0.00\n" % (k, template_POS.atoms.positions[i][0], template_POS.atoms.positions[i][1], template_POS.atoms.positions[i][2]))
+			OFlipid.write(PDBFMTSTR.format(
+				k,'CH','LIP',4, old_pos[i][0], 
+				old_pos[i][1], old_pos[i][2]))
+			OFlipidPos.write(PDBFMTSTR.format(
+				k,'CH','LIP',4,template_POS.atoms.positions[i][0],
+				template_POS.atoms.positions[i][1],
+				template_POS.atoms.positions[i][2]))
 			k += 1
 
 	OFlipid.write("TER\n ENDMDL\n")
@@ -303,6 +499,7 @@ def ezAlign(args):
 	#####################################
 	##### EM ALL LIPIDS WITH POS RES ####
 	#####################################
+	
 	call_gromacs(args,'grompp -f '+BaseDir+'/files/em_all_no_inter.mdp -c lipid.pdb -r lipid_pos.pdb -p aa_lipid.top -o t_EM_ALL -maxwarn 34')
 	call_gromacs(args,'mdrun -deffnm t_EM_ALL -c t_EM_ALL.gro -v')
 	call_gromacs(args,'trjconv -f t_EM_ALL.gro -s t_EM_ALL.tpr -pbc nojump -o t_EM_pbc.pdb','echo 0 | ')
@@ -310,25 +507,33 @@ def ezAlign(args):
 	call_gromacs(args,'mdrun -deffnm t_SD_ALL -c t_SD_ALL.gro -v')
 	call_gromacs(args,'trjconv -f t_SD_ALL.gro -s t_SD_ALL.tpr -pbc nojump -o t_SD_pbc.pdb','echo 0 | ')
 
-	####################################
-	#### CHECK FOR BAD LIPID CONTACTS ##
-	####################################
-	l_all = mda.Universe('t_SD_pbc.pdb',in_memory=True)
-	badContacts = mda.lib.distances.self_capped_distance(l_all.atoms.positions, max_cutoff=0.1, min_cutoff=0, box=l_all.dimensions, return_distances=False)
-	if len(badContacts) > 0:
-		call_gromacs(args,'grompp -f '+BaseDir+'/files/g_eq.mdp -c t_SD_pbc.pdb  -r t_SD_pbc.pdb -p aa_lipid.top -o g_1 -maxwarn 34')
-		call_gromacs(args,'mdrun -deffnm g_1 -c g_1.gro -v')
-		call_gromacs(args,'trjconv -f g_1.gro -s g_1.tpr -pbc nojump -o t_g1_pbc.pdb','echo 0 | ')
-		call_gromacs(args,'grompp -f '+BaseDir+'/files/g_eq2.mdp -c t_g1_pbc.pdb  -r t_g1_pbc.pdb -p aa_lipid.top -o g_2 -maxwarn 34')
-		call_gromacs(args,'mdrun -deffnm g_2 -c g_2.gro -v')
-		call_gromacs(args,'trjconv -f g_2.gro -s g_2.tpr -pbc nojump -o grow.pdb','echo 0 | ')
-	else:
-		subprocess.call('cp t_SD_pbc.pdb grow.pdb', shell=True)
-	l_all2 = mda.Universe("grow.pdb",in_memory=True)
-	badContacts2 = mda.lib.distances.self_capped_distance(l_all2.atoms.positions, max_cutoff=0.1, min_cutoff=0, box=l_all.dimensions, return_distances=False)
-	subprocess.call('cat grow.pdb | grep -v ENDM | grep -v TER > full_system.pdb', shell=True)	
-	OF.write("Bad contacts are %d before, and  %d after" % (len(badContacts), len(badContacts2)))
-	OF.close()
+	subprocess.call('cat t_SD_pbc.pdb | grep CRYST1 > full_system.pdb', shell=True)
+	subprocess.call('cat t_SD_pbc.pdb | grep ATOM >> full_system.pdb', shell=True)
+
+	##############################
+	##     PROTEIN ALIGNMENT    ##
+	##############################
+
+	if args.pi is not None and args.pp is not None:
+		aa_protein_template = mda.Universe(args.pp)
+		aa_CA = get_aa_CA(aa_protein_template)
+		cg_CA = all_CG.select_atoms('name BB')
+		cg_prot_com = cg_CA.center(weights=None)
+		aa_prot_com = aa_CA.center(weights=None)
+		cg_prot_coord = cg_CA.positions - cg_prot_com
+		aa_prot_coord = aa_CA.positions - aa_prot_com
+		R, min_rmsd = align.rotation_matrix(aa_prot_coord, cg_prot_coord)
+		aa_protein_template.atoms.translate(-aa_prot_com)
+		aa_protein_template.atoms.rotate(R)
+		aa_protein_template.atoms.translate(cg_prot_com)
+		aa_protein_template.atoms.write("EZALIGNED_TEMPLATE_AA_prot.pdb")
+		write_prot_posres(aa_CA,cg_CA,aa_protein_template,all_CG)
+		write_prot_top(prot_molname)
+		box = all_CG.dimensions[:3] * 0.1
+		call_gromacs(args,'editconf -f EZALIGNED_TEMPLATE_AA_prot.pdb -o aa_prot1.gro -box {:.3f} {:.3f} {:.3f}'.format(*box))
+		call_gromacs(args,'grompp -f '+BaseDir+'/files/em1_prot.mdp -c aa_prot1.gro -r posres_prot.pdb -p aa_prot.top -o em1_prot -maxwarn 34')
+		call_gromacs(args,'mdrun -deffnm em1_prot -c em1_prot.pdb')#,nt=1)
+		subprocess.call('cat em1_prot.pdb | grep ATOM >> full_system.pdb', shell=True)
 
 	try:
 		OF2 = open("full_system.pdb", 'a')
@@ -345,9 +550,11 @@ def ezAlign(args):
 	num_water=0
 	water_AA = mda.Universe(BaseDir+"/files/aa_water.pdb",in_memory=True)
 	for residue in water_CG.residues:
-		water_new = water_AA.atoms.positions + (residue.atoms.positions -  numpy.average(water_AA.atoms.positions)) 
+		water_new = water_AA.atoms.positions + (residue.atoms.positions -  np.average(water_AA.atoms.positions)) 
 		for j in range(12):
-			OF2.write("ATOM  %6d OH  SOL     4    %8.3f%8.3f%8.3f  1.00  0.00\n" % (k, water_new[j][0], water_new[j][1], water_new[j][2]))
+			OF2.write(PDBFMTSTR.format(
+				k,'OH','SOL',4, water_new[j][0], 
+				water_new[j][1], water_new[j][2]))
 			k += 1
 		i += 1
 		num_water += 4
@@ -356,19 +563,23 @@ def ezAlign(args):
 	##################################
 	###          Add IONS          ###
 	##################################
-	ions_CG = all_CG.select_atoms("resname ION")
+	ions_CG = all_CG.select_atoms("resname ION or resname NA or resname CL")
 	i = 0
 	k=1
 	num_NA=0
 	num_CL=0
 	ion_AA = mda.Universe(BaseDir+"/files/aa_water_ion.pdb",in_memory=True)
 	for residue in ions_CG.residues:
-		ion_new = ion_AA.atoms.positions + (residue.atoms.positions - numpy.average(ion_AA.atoms.positions))
+		ion_new = ion_AA.atoms.positions + (residue.atoms.positions - np.average(ion_AA.atoms.positions))
 		for j in range(12):
-			OF3.write("ATOM  %6d OH  SOL     4    %8.3f%8.3f%8.3f  1.00  0.00\n" % (k, ion_new[j][0], ion_new[j][1], ion_new[j][2]))
+			OF3.write(PDBFMTSTR.format(
+				k,'OH','SOL',4,ion_new[j][0], 
+				ion_new[j][1],ion_new[j][2]))
 			k += 1
 		num_water += 4
-		OF3.write("ATOM  %6d OH  ION     4    %8.3f%8.3f%8.3f  1.00  0.00\n" % (k, ion_new[12][0], ion_new[12][1], ion_new[12][2]))
+		OF3.write(PDBFMTSTR.format(
+			k,'OH','ION',4,ion_new[12][0], 
+			ion_new[12][1],ion_new[12][2]))
 		i += 1
 		if residue.atoms.names == 'Na' or residue.atoms.names  == 'Na+' or residue.atoms.names == 'NA+' or residue.atoms.names == 'SOD'or residue.atoms.names == 'NA':
 			num_NA += 1
@@ -383,20 +594,23 @@ def ezAlign(args):
 	subprocess.call('echo TER >> full_system.pdb', shell=True)
 	subprocess.call('echo ENDMDL >> full_system.pdb', shell=True)
 
-	############################
-	##   Write full topology  ##
-	############################
-	subprocess.call('cp aa_lipid.top aa.top', shell=True)
-	fout_aa=open("aa.top","a")
-	fout_aa.write("SOL    %d\n NA    %d\n CL     %d\n" % (num_water, num_NA, num_CL))
-	fout_aa.close()
+	write_full_top(args,prot_molname,num_water,num_NA,num_CL)
 	##########################################
 	##  Minimization and equilibrate        ##
 	##########################################
+	#os.environ['GMX_SUPPRESS_DUMP'] = '1'
+
+	#print('\n Clashes in full_system.pdb: {:d}\n'.format(
+	#	get_contacts('full_system.pdb')))
+	# above is broken, probably needs trjconv first
+
 	call_gromacs(args,'grompp -f '+BaseDir+'/files/em1_sc.mdp -c full_system.pdb -r full_system.pdb -p aa.top -o EM_SC1 -maxwarn 34')
 	call_gromacs(args,'mdrun -deffnm EM_SC1 -v')
 	call_gromacs(args,'grompp -f '+BaseDir+'/files/sd1_sc.mdp -c EM_SC1.gro -r EM_SC1.gro -p aa.top -o SD_SC1 -maxwarn 34')
 	call_gromacs(args,'mdrun -deffnm SD_SC1 -v')
+	
+	print('\n Clashes in SD_SC1.gro: {:d}\n'.format(
+		get_contacts('SD_SC1.gro')))
 
 	call_gromacs(args,'grompp -f '+BaseDir+'/files/em1.mdp -c SD_SC1.gro -r SD_SC1.gro -p aa.top -o EM -maxwarn 34')
 	call_gromacs(args,'mdrun -deffnm EM -c EM.gro -v')
@@ -405,8 +619,8 @@ def ezAlign(args):
 	call_gromacs(args,'grompp -f '+BaseDir+'/files/eq1.mdp -c t_EM1.pdb -r t_EM1.pdb -p aa.top -o eq_1 -maxwarn 34')
 	call_gromacs(args,'mdrun -deffnm eq_1 -c eq_1.gro -v')
 	call_gromacs(args,'make_ndx -f eq_1.gro ','(echo del 0-100; echo r SOL NA CL; echo !0; echo name 0 SOL_ION; echo name 1 Bilayer; echo q) | ')
+	
 	call_gromacs(args,'trjconv -f eq_1.gro -s eq_1.tpr -pbc nojump -o t_EQ1.pdb','echo 0 | ')
-
 	call_gromacs(args,'grompp -f '+BaseDir+'/files/eq2.mdp -c t_EQ1.pdb -r t_EQ1.pdb -p aa.top -o eq_2 -n index.ndx -maxwarn 34')
 	call_gromacs(args,'mdrun -deffnm eq_2 -c eq_2.pdb -v')
 	call_gromacs(args,'grompp -f '+BaseDir+'/files/eq3.mdp -c eq_2.pdb  -p aa.top -o eq_3 -n index.ndx -maxwarn 34')
