@@ -1,16 +1,16 @@
 # ezAlign
 Coarse grain to atomistic molecular coordinate and topology converter for molecular dynamics simulations.
 ## Description
-ezAlign takes coarse grain (CG) coordinate and topology files and converts and outputs their corresponding atomistic formats using an alignment and relaxation procedure outlined in reference [1].  ezAlign is designed to convert complex, solvated biological systems including lipid membranes with drug-like molecules using GROMACS [2]. A GROMACS checkpoint (.cpt) file is also outputted to enable continuation simulations that retain the equilibrated atomic velocities.  Note that ezAlign specifically requires GROMACS 5.x, and other versions are likely incompatible.
+ezAlign takes coarse grain (CG) coordinate and topology files and converts and outputs their corresponding atomistic formats using an alignment and relaxation procedure outlined in reference [1].  ezAlign is designed to convert complex, solvated biological systems including lipid membranes, drug-like molecules, and proteins using GROMACS [2]. A GROMACS checkpoint (.cpt) file is also outputted to enable continuation simulations that retain the equilibrated atomic velocities.  Note that ezAlign specifically requires GROMACS 2022 or later.
 
-Independent atomistic coordinates and topologies for every molecule must already be included in `ezAlign/files`.  Single molecule coordinate, topology, and mapping may also be specified during execution using the appropriate command-line options.  A number of commonly simulated biological molecules are currently provided.  For instructions on including additional molecules, see the parameterization section.
+Independent atomistic coordinates and topologies for every molecule must already be included in `ezAlign/files`.  Single molecule coordinate, topology, and mapping may also be specified during execution using the appropriate command-line options.  A number of commonly simulated biological molecules are currently provided.  For instructions on including additional molecules, see the parameterization section.  A protein complex can now be mapped by specifying a template coordinate (-pp) and topology file (-pi).  Amino acid mappings are stored in files/amino_map.py, which can be modified to include non-standard amino acid mappings.
 
 ## Requirements
 * Linux OS
 * Python 3.x
 * MDAnalysis 2.x.x or greater
 * numpy 1.20.x or greater
-* GROMACS 5.x
+* GROMACS 2022 or later
 
 ## Installation
 1. Clone or download ezAlign
