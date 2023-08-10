@@ -1,0 +1,57 @@
+; RUN CONTROL PARAMETERS
+integrator               = steep
+define                   = -DPOSRES_PROT
+; Start time and timestep in ps
+tinit                    = 0
+nsteps                   = 50000
+; mode for center of mass motion removal
+comm-mode                = Linear
+; number of steps for center of mass motion removal
+nstcomm                  = 100
+; group(s) for center of mass motion removal
+comm-grps                = 
+
+; ENERGY MINIMIZATION OPTIONS
+; Force tolerance and initial step-size
+emtol                    = 100
+
+; OUTPUT CONTROL OPTIONS
+; Output frequency for coords (x), velocities (v) and forces (f)
+nstxout                  = 50
+nstvout                  = 0
+nstfout                  = 0
+; Output frequency for energies to log file and energy file
+nstlog                   = 50
+nstcalcenergy            = 50
+nstenergy                = 50
+; Output frequency and precision for .xtc file
+nstxout-compressed       = 50
+
+; NEIGHBORSEARCHING PARAMETERS
+; cut-off scheme (Verlet: particle based cut-offs, group: using charge groups)
+cutoff-scheme            = Verlet
+; nblist update frequency
+nstlist                  = 20
+; ns algorithm (simple or grid)
+ns_type                  = grid
+; Periodic boundary conditions: xyz, no, xy
+pbc                      = xyz
+periodic-molecules       = no
+; Allowed energy error due to the Verlet buffer in kJ/mol/ps per atom,
+; a value of -1 means: use rlist
+verlet-buffer-tolerance  = 0.005
+; nblist cut-off        
+rlist                    = 1.2
+
+; OPTIONS FOR ELECTROSTATICS AND VDW
+; Method for doing electrostatics
+coulombtype              = cut-off
+rcoulomb                 = 1.2
+; Method for doing Van der Waals
+vdw_type                 = cutoff
+rvdw                     = 1.2
+DispCorr                 = No
+
+; OPTIONS FOR BONDS    
+constraints              = none
+

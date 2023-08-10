@@ -1,0 +1,30 @@
+# amino_map[AA_resname]= atname_map
+# atname_map[AA_atname] = CG_atname
+amino_map = {
+	'ALA':{'CA':'BB'},
+	'ARG':{'CA':'BB','CG':'SC1','CZ':'SC2'},
+	'ASN':{'CA':'BB','CG':'SC1'},
+	'ASP':{'CA':'BB','CG':'SC1'},
+	'CYM':{'CA':'BB','SG':'SC1'},
+	'CYS':{'CA':'BB','SG':'SC1'},
+	'CYX':{'CA':'BB','SG':'SC1'},
+	'GLN':{'CA':'BB','CG':'SC1'},
+	'GLU':{'CA':'BB','CG':'SC1'},
+	'GLY':{'CA':'BB'},
+	'HID':{'CA':'BB','CG':'SC1','CE1':'SC2','CD2':'SC3'},
+	'HIE':{'CA':'BB','CG':'SC1','CE1':'SC2','CD2':'SC3'},
+	'HIP':{'CA':'BB','CG':'SC1','CE1':'SC2','CD2':'SC3'},
+	'HIS':{'CA':'BB','CG':'SC1','CE1':'SC2','CD2':'SC3'},
+	'ILE':{'CA':'BB','CG1':'SC1'},
+	'LEU':{'CA':'BB','CG':'SC1'},
+	'LYS':{'CA':'BB','CG':'SC1','NZ':'SC2'},
+	'MET':{'CA':'BB','CG':'SC1'},
+	'PHE':{'CA':'BB','CG':'SC1','CE1':'SC2','CE2':'SC3'},
+	'PRO':{'CA':'BB','CG':'SC1'},
+	'SER':{'CA':'BB','OG':'SC1'},
+	'THR':{'CA':'BB','CB':'SC1'},
+	'TRP':{'CA':'BB','CG':'SC1','NE1':'SC2','CE3':'SC3','CH2':'SC4'},
+	'TYR':{'CA':'BB','CD1':'SC1','CD2':'SC2','CZ':'SC3'},
+	'VAL':{'CA':'BB','CB':'SC1'},
+	'CYF':{'C':'BB','SG':'SC1','CL':'F1','CO':'F2','CU':'F3','CW':'F4'}
+}
