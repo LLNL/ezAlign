@@ -839,25 +839,25 @@ CHOL               3
 #ifdef POSRES
 [ position_restraints ]
 ; ai  funct  fcx    fcy    fcz
-    2      1     100000   100000   100000   ; restrains to a point
-    40     1     100000   100000   100000   ; restrains to a point
-    31     1     100000   100000   100000   ; restrains to a point
-    41     1     100000   100000   100000  ; restrains to a point
-    21     1     100000   100000   100000   ; restrains to a point
-    27     1     100000   100000   100000   ; restrains to a point
-    59     1     100000   100000   100000   ; restrains to a point
-    71    1     100000   100000   100000   ; restrains to a point
-#endif 
+     2     1     1000   1000   1000
+    40     1     1000   1000   1000
+    31     1     1000   1000   1000
+    41     1     1000   1000   1000
+    21     1     1000   1000   1000
+    27     1     1000   1000   1000
+    59     1     1000   1000   1000
+    71     1     1000   1000   1000
+#endif
 
 #ifdef SOFTRES
 [ position_restraints ]
 ; ai  funct  fcx    fcy    fcz
-    2      1     10   10   10   ; restrains to a point
-    40     1     10   10   10   ; restrains to a point
-    31     1     10   10   10   ; restrains to a point
-    41     1     10   10   10  ; restrains to a point
-    21     1     10   10   10   ; restrains to a point
-    27     1     10   10   10   ; restrains to a point
-    59     1     10   10   10   ; restrains to a point
-    71    1     10   10   10   ; restrains to a point
+     2     1     10   10   10
+    40     1     10   10   10
+    31     1     10   10   10
+    41     1     10   10   10
+    21     1     10   10   10
+    27     1     10   10   10
+    59     1     10   10   10
+    71     1     10   10   10
 #endif

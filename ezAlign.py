@@ -88,8 +88,8 @@ def sed_resnames(res_maps,filename):
 			CG_resname,AT_resname,filename)
 		os.system(line)
 
-# writes ezAlign position restraints to itp files
-# if they are not already present
+# writes ezAlign position restraints to itp files.
+# overwrites if already present
 def write_pos_restraints(resmap,BaseDir,args):
 	if args.t is not None:
 		cmdline_res = re.split('[/.]',args.t)[-2]
@@ -104,22 +104,28 @@ def write_pos_restraints(resmap,BaseDir,args):
 			buff = myfile.read()
 	except:
 		return
-	if "\n#ifdef POSRES" in buff:
-		return
 	posres_bufflist = ['\n#ifdef POSRES\n',
 		'[ position_restraints ]\n',
 		'; ai  funct  fcx    fcy    fcz\n']
 	softres_bufflist = ['\n#ifdef SOFTRES\n',
                 '[ position_restraints ]\n',
                 '; ai  funct  fcx    fcy    fcz\n']
+	fpos = 1000 # kJ/mol/nm^2
+	fpos_soft = 10 # kJ/mol/nm^2
 	for j in resmap[1]:
-		posres_line = "{:>6d}     1     100000   100000   100000\n".format(j)
-		softres_line = "{:>6d}     1     10   10   10\n".format(j)
+		posres_line = "{:>6d}     1     {:d}   {:d}   {:d}\n".format(
+			j,fpos,fpos,fpos)
+		softres_line = "{:>6d}     1     {:d}   {:d}   {:d}\n".format(
+			j,fpos_soft,fpos_soft,fpos_soft)
 		posres_bufflist.append(posres_line)
 		softres_bufflist.append(softres_line)
 	posres_bufflist.append('#endif\n')
 	softres_bufflist.append('#endif\n')
-	bufflist = [buff] + posres_bufflist + softres_bufflist
+	try:
+		j = buff.index("\n#ifdef POSRES")
+	except:
+		j = -1
+	bufflist = [buff[:j]] + posres_bufflist + softres_bufflist
 	buff = ''.join(bufflist)
 	with open(filename,'w') as myfile:
 		myfile.write(buff)		
@@ -347,6 +353,7 @@ def init():
 
 def ezAlign(args):
 	RunDir = ".ezAlign"
+	prot_molname = ""
 	
 	if os.path.isdir(RunDir):
 		shutil.rmtree(RunDir)

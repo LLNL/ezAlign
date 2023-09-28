@@ -25,7 +25,7 @@ nbfgscorr                = 10
 
 ; OUTPUT CONTROL OPTIONS
 ; Output frequency for coords (x), velocities (v) and forces (f)
-nstxout                  = 0
+nstxout                  = 10
 nstvout                  = 0
 nstfout                  = 0
 ; Output frequency for energies to log file and energy file
@@ -33,7 +33,7 @@ nstlog                   = 1000
 nstcalcenergy            = 100
 nstenergy                = 100
 ; Output frequency and precision for .xtc file
-nstxout-compressed       = 1000
+nstxout-compressed       = 10
 compressed-x-precision   = 100
 
 ; NEIGHBORSEARCHING PARAMETERS
@@ -78,5 +78,4 @@ couple-lambda1           = none
 couple-intramol          = no
 init-lambda              = 1
 delta-lambda             = 0
-nstdhdl                  = 50
-
+sc-alpha                 = 1E3

@@ -1244,36 +1244,33 @@ DPPC	     3
 #ifdef POSRES
 [ position_restraints ]
 ; ai  funct  fcx    fcy    fcz
-    12     1     100000   100000   100000   ; restrains to a point
-    20     1     100000   100000   100000   ; restrains to a point
-    40     1     100000   100000   100000   ; restrains to a point
-    31     1     100000   100000   100000  ; restrains to a point
-    91     1     100000   100000   100000   ; restrains to a point
-    103    1     100000   100000   100000   ; restrains to a point
-    115    1     100000   100000   100000   ; restrains to a point
-    127    1     100000   100000   100000   ; restrains to a point
-    51     1     100000   100000   100000   ; restrains to a point
-    63     1     100000   100000   100000   ; restrains to a point
-    77     1     100000   100000   100000   ; restrains to a point
-    84     1     100000   100000   100000   ; restrains to a point
+    12     1     1000   1000   1000
+    20     1     1000   1000   1000
+    40     1     1000   1000   1000
+    31     1     1000   1000   1000
+    91     1     1000   1000   1000
+   103     1     1000   1000   1000
+   115     1     1000   1000   1000
+   127     1     1000   1000   1000
+    51     1     1000   1000   1000
+    63     1     1000   1000   1000
+    77     1     1000   1000   1000
+    84     1     1000   1000   1000
 #endif
 
 #ifdef SOFTRES
 [ position_restraints ]
 ; ai  funct  fcx    fcy    fcz
-    12     1     10   10   10   ; restrains to a point
-    20     1     10   10   10   ; restrains to a point
-    40     1     10   10   10   ; restrains to a point
-    31     1     10   10   10  ; restrains to a point
-    91     1     10   10   10   ; restrains to a point
-    103    1     10   10   10   ; restrains to a point
-    115    1     10   10   10   ; restrains to a point
-    127    1     10   10   10   ; restrains to a point
-    51     1     10   10   10   ; restrains to a point
-    63     1     10   10   10   ; restrains to a point
-    77     1     10   10   10   ; restrains to a point
-    84     1     10   10   10   ; restrains to a point
+    12     1     10   10   10
+    20     1     10   10   10
+    40     1     10   10   10
+    31     1     10   10   10
+    91     1     10   10   10
+   103     1     10   10   10
+   115     1     10   10   10
+   127     1     10   10   10
+    51     1     10   10   10
+    63     1     10   10   10
+    77     1     10   10   10
+    84     1     10   10   10
 #endif
-
-
-

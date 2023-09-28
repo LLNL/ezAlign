@@ -1269,33 +1269,33 @@ POPC	     3
 #ifdef POSRES
 [ position_restraints ]
 ; ai  funct  fcx    fcy    fcz
-     1     1     100000   100000   100000   ; restrains to a point
-    20     1     100000   100000   100000   ; restrains to a point
-    31     1     100000   100000   100000   ; restrains to a point
-    40     1     100000   100000   100000   ; restrains to a point
-    51     1     100000   100000   100000   ; restrains to a point
-    60     1     100000   100000   100000   ; restrains to a point
-    76     1     100000   100000   100000   ; restrains to a point
-    88     1     100000   100000   100000   ; restrains to a point
-    95     1     100000   100000   100000   ; restrains to a point
-   107     1     100000   100000   100000   ; restrains to a point
-   119     1     100000   100000   100000   ; restrains to a point
-   131     1     100000   100000   100000   ; restrains to a point
+     1     1     1000   1000   1000
+    20     1     1000   1000   1000
+    31     1     1000   1000   1000
+    40     1     1000   1000   1000
+    51     1     1000   1000   1000
+    60     1     1000   1000   1000
+    76     1     1000   1000   1000
+    88     1     1000   1000   1000
+    95     1     1000   1000   1000
+   107     1     1000   1000   1000
+   119     1     1000   1000   1000
+   131     1     1000   1000   1000
 #endif
 
 #ifdef SOFTRES
 [ position_restraints ]
 ; ai  funct  fcx    fcy    fcz
-    1     1     10   10   10   ; restrains to a point
-    20     1     10   10   10   ; restrains to a point
-    31     1     10   10   10   ; restrains to a point
-    40     1     10   10   10   ; restrains to a point
-    51    1     10   10   10   ; restrains to a point
-    60    1     10   10   10   ; restrains to a point
-    76    1     10   10   10   ; restrains to a point
-    88    1     10   10   10   ; restrains to a point
-    95    1     10   10   10   ; restrains to a point
-   107    1     10   10   10   ; restrains to a point
-   119    1     10   10   10   ; restrains to a point
-   131     1     10   10   10   ; restrains to a point
+     1     1     10   10   10
+    20     1     10   10   10
+    31     1     10   10   10
+    40     1     10   10   10
+    51     1     10   10   10
+    60     1     10   10   10
+    76     1     10   10   10
+    88     1     10   10   10
+    95     1     10   10   10
+   107     1     10   10   10
+   119     1     10   10   10
+   131     1     10   10   10
 #endif

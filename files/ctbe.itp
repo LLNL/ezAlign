@@ -560,19 +560,19 @@ ctbe				 3
 #ifdef POSRES
 [ position_restraints ]
 ; ai  funct  fcx    fcy    fcz
-  33     1     100000   100000   100000   ; restrains to a point
-  49     1     100000   100000   100000   ; restrains to a point
-  46     1     100000   100000   100000   ; restrains to a point
-  42     1     100000   100000   100000   ; restrains to a point
-  35     1     100000   100000   100000   ; restrains to a point
+    34     1     1000   1000   1000
+    49     1     1000   1000   1000
+    46     1     1000   1000   1000
+    42     1     1000   1000   1000
+    35     1     1000   1000   1000
 #endif
 
 #ifdef SOFTRES
 [ position_restraints ]
 ; ai  funct  fcx    fcy    fcz
-  33     1     10   10   10   ; restrains to a point
-  49     1     10   10   10   ; restrains to a point
-  46     1     10   10   10  ; restrains to a point
-  42     1     10   10   10   ; restrains to a point
-  35     1     10   10   10   ; restrains to a point
+    34     1     10   10   10
+    49     1     10   10   10
+    46     1     10   10   10
+    42     1     10   10   10
+    35     1     10   10   10
 #endif

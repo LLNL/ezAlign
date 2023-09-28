@@ -444,20 +444,19 @@ lsar				 3
 #ifdef POSRES
 [ position_restraints ]
 ; ai  funct  fcx    fcy    fcz
-  32     1     100000   100000   100000   ; restrains to a point
-  34     1     100000   100000   100000   ; restrains to a point
-  42     1     100000   100000   100000   ; restrains to a point
-  45     1     100000   100000   100000   ; restrains to a point
-  36     1     100000   100000   100000   ; restrains to a point
+    32     1     1000   1000   1000
+    34     1     1000   1000   1000
+    42     1     1000   1000   1000
+    45     1     1000   1000   1000
+    36     1     1000   1000   1000
 #endif
 
 #ifdef SOFTRES
 [ position_restraints ]
 ; ai  funct  fcx    fcy    fcz
-  32     1     10   10   10   ; restrains to a point
-  34     1     10   10   10   ; restrains to a point
-  42     1     10   10   10   ; restrains to a point
-  45     1     10   10   10   ; restrains to a point
-  36     1     10   10   10   ; restrains to a point
+    32     1     10   10   10
+    34     1     10   10   10
+    42     1     10   10   10
+    45     1     10   10   10
+    36     1     10   10   10
 #endif
-
