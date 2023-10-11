@@ -124,7 +124,7 @@ def write_pos_restraints(resmap,BaseDir,args):
 	try:
 		j = buff.index("\n#ifdef POSRES")
 	except:
-		j = -1
+		j = None
 	bufflist = [buff[:j]] + posres_bufflist + softres_bufflist
 	buff = ''.join(bufflist)
 	with open(filename,'w') as myfile:
