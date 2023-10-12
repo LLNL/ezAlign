@@ -104,6 +104,8 @@ def write_pos_restraints(resmap,BaseDir,args):
 			buff = myfile.read()
 	except:
 		return
+	if len(buff) == 0:
+		return
 	posres_bufflist = ['\n#ifdef POSRES\n',
 		'[ position_restraints ]\n',
 		'; ai  funct  fcx    fcy    fcz\n']
@@ -123,6 +125,23 @@ def write_pos_restraints(resmap,BaseDir,args):
 	softres_bufflist.append('#endif\n')
 	try:
 		j = buff.index("\n#ifdef POSRES")
+		k = buff.index('\n',j+1)+1
+		k = buff.index('\n',k)+1
+		k = buff.index('\n',k)+1
+		k = buff.index('\n',k)+1
+		pos_buff = "{:d}   {:d}   {:d}\n".format(fpos,fpos,fpos)
+		n = len(pos_buff)
+		if buff[k-n:k] == pos_buff:
+			return
+		k = buff.index("\n#ifdef SOFTRES",k)
+		k = buff.index('\n',k+1)+1
+		k = buff.index('\n',k)+1
+		k = buff.index('\n',k)+1
+		k = buff.index('\n',k)+1
+		pos_buff = "{:d}   {:d}   {:d}\n".format(fpos_soft,fpos_soft,fpos_soft)
+		n = len(pos_buff)
+		if buff[k-n:k] == pos_buff:
+			return
 	except:
 		j = None
 	bufflist = [buff[:j]] + posres_bufflist + softres_bufflist
@@ -428,6 +447,8 @@ def ezAlign(args):
 						fout.write(line)
 					elif data[0]!=prot_molname:
 						fout.write(line)
+	if start_read != 1:
+		raise RuntimeError('"[ molecules ]" directive in cg topology not found.')
 	fout.write("\n")
 	fout.close()
 	fin_top.close()
