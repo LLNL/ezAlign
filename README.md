@@ -12,6 +12,9 @@ Independent atomistic coordinates and topologies for every molecule must already
 * numpy 1.20.x or greater
 * GROMACS 2022 or later
 
+### Topology requirements
+Input GROMACS topology directives must be specified as `[ directive ]` (not `[directive]`).
+
 ## Installation
 1. Clone or download ezAlign
 2. Execute `./configure`
