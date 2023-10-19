@@ -24,7 +24,7 @@ Input GROMACS topology directives must be specified as `[ directive ]` (not `[di
 Execute `ezAlign.py -h` for a brief description of arguments.
 
 ## Example
-A working example of CG oleate in a POPC bilayer is proivded in the examples folder.  Within the folder, simply execute
+A working example of CG oleate in a POPC bilayer is provided in the examples folder.  Within the folder, simply execute
 ```
 ezAlign.py -f input_CG.pdb -p cg.top
 ```
