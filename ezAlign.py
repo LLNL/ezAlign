@@ -89,7 +89,8 @@ def sed_resnames(res_maps,filename):
 		os.system(line)
 
 # writes ezAlign position restraints to itp files.
-# overwrites if already present
+# overwrites if already present and first restraints
+# are different
 def write_pos_restraints(resmap,BaseDir,args):
 	if args.t is not None:
 		cmdline_res = re.split('[/.]',args.t)[-2]
@@ -210,6 +211,9 @@ def write_full_top(args,prot_molname,num_water,num_NA,num_CL):
 
 # Returns an mdanalysis CA atomgroup that is protein-like:
 # only residues that have atom names CA, N, and C
+# NOTE: if resids are not monotonic and you have residues that
+# contain CA, N, or C and aren't protein, this function could
+# fail to produce the correct CA atomgroup in some edge cases
 def get_aa_CA(aa_protein_template):
 	sels = []
 	sels.append(aa_protein_template.select_atoms('name CA'))
@@ -221,12 +225,11 @@ def get_aa_CA(aa_protein_template):
 	for j in range(nsels):
 		resids[j] = sels[j].resids[0]
 		numsels[j] = sels[j].positions.shape[0]
-	resgroup = []
+	agslice = []
 	selinds = np.zeros((nsels),dtype=int)
 	while True:
 		if np.all(resids == resids[0]):
-			resgroup.append('resid {:d}'.format(
-				resids[0]))
+			agslice.append(selinds[0])
 			selinds += 1
 		else:
 			selinds[np.argmin(resids)] += 1
@@ -234,8 +237,7 @@ def get_aa_CA(aa_protein_template):
 			break
 		for j in range(nsels):
 			resids[j] = sels[j].resids[selinds[j]]
-	return aa_protein_template.select_atoms('name CA and (' +
-		' or '.join(resgroup) + ')')
+	return sels[0][agslice]
 
 # Writes protein position restraints for relaxation according 
 # to AA and CG names from amino_map.py.  Also writes .itp and pdbs.
