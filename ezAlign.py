@@ -664,7 +664,7 @@ def ezAlign(args):
 
 	if not args.keep:
 		os.chdir('..')
-		shutil.rmtree(RunDir)
+		shutil.rmtree(RunDir,ignore_errors=True)
 
 def main():
 	args = init()
