@@ -1,6 +1,6 @@
 ; RUN CONTROL PARAMETERS
 integrator               = steep
-define                   = -DPOSRES_PROT
+define                   = -DPOSRES_PROT_SOFT
 ; Start time and timestep in ps
 tinit                    = 0
 nsteps                   = 50000

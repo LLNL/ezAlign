@@ -1,0 +1,36 @@
+integrator               = md
+define                   = -DPOSRES_PROT
+nsteps                   = 40000
+dt                       = 0.0002
+comm-mode                = Linear
+nstcomm                  = 100
+
+nstxout                  = 0
+nstlog                   = 400
+nstcalcenergy            = 400
+nstenergy                = 400
+nstxout-compressed       = 400
+
+cutoff-scheme            = Verlet
+nstlist                  = 20
+ns_type                  = grid
+pbc                      = xyz
+verlet-buffer-tolerance  = 0.005
+
+coulombtype              = cut-off
+rcoulomb                 = 1.2
+; Method for doing Van der Waals
+vdw_type                 = cutoff
+rvdw                     = 1.2
+DispCorr                 = No
+
+tcoupl                  = v-rescale
+tc_grps                 = System
+nsttcouple              = 1
+ref_t                   = 10
+tau_t                   = 0
+gen-vel                 = yes
+gen-temp                = 10
+
+constraints              = none
+

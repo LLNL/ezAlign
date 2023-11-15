@@ -246,6 +246,9 @@ def write_prot_posres(aa_ca_sel,cg_bb_sel,aa_template,cg_template):
 	posres_bufflist = ['\n#ifdef POSRES_PROT\n',
 		'[ position_restraints ]\n',
 		'; ai  funct  fcx    fcy    fcz\n']
+	posres2_bufflist = ['\n#ifdef POSRES_PROT_SOFT\n',
+		'[ position_restraints ]\n',
+		'; ai  funct  fcx    fcy    fcz\n']
 	pdb_bufflist = []
 	aa_ref_ixs = []
 	cg_ref_ixs = []
@@ -266,6 +269,7 @@ def write_prot_posres(aa_ca_sel,cg_bb_sel,aa_template,cg_template):
 	k = 0
 	N_k = len(aa_ref_ixs)
 	f_const = 1000 #kj/mol/nm**2
+	f_soft  = 100
 	n_atoms = len(aa_template.atoms)
 	for j in range(n_atoms):
 		cur_ix = aa_template.atoms[j].ix
@@ -279,14 +283,18 @@ def write_prot_posres(aa_ca_sel,cg_bb_sel,aa_template,cg_template):
 				resid,*cg_pos))
 			posres_bufflist.append('{:>10d} 1 {:>10d} {:>10d} {:>10d}\n'.format(
 				cur_ix+1,f_const,f_const,f_const))
+			posres2_bufflist.append('{:>10d} 1 {:>10d} {:>10d} {:>10d}\n'.format(
+				cur_ix+1,f_soft,f_soft,f_soft))
 			k += 1
 		else:
 			pdb_bufflist.append(PDBFMTSTR.format(
 				cur_ix+1,name,resname,
 				resid,0,0,0))
 	posres_bufflist.append('#endif\n')
+	posres2_bufflist.append('#endif\n')
 	with open('aa_prot.itp','a') as myfile:
-		myfile.write(''.join(posres_bufflist))
+		myfile.write(''.join(posres_bufflist
+			+posres2_bufflist))
 	with open('posres_prot.pdb','w') as myfile:
 		myfile.write(''.join(pdb_bufflist))
 
@@ -563,6 +571,8 @@ def ezAlign(args):
 		call_gromacs(args,'editconf -f EZALIGNED_TEMPLATE_AA_prot.pdb -o aa_prot1.gro -box {:.3f} {:.3f} {:.3f}'.format(*box))
 		call_gromacs(args,'grompp -f '+BaseDir+'/files/em1_prot.mdp -c aa_prot1.gro -r posres_prot.pdb -p aa_prot.top -o em1_prot -maxwarn 34')
 		call_gromacs(args,'mdrun -deffnm em1_prot -c em1_prot.pdb')#,nt=1)
+		call_gromacs(args,'grompp -f '+BaseDir+'/files/md1_prot.mdp -c em1_prot.pdb -r posres_prot.pdb -p aa_prot.top -o md1_prot -maxwarn 34')
+		call_gromacs(args,'mdrun -deffnm md1_prot -c md1_prot.pdb')
 		subprocess.call('cat em1_prot.pdb | grep ATOM >> full_system.pdb', shell=True)
 
 	try:
