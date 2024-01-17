@@ -13,6 +13,7 @@ amino_map = {
 	'GLY':{'CA':'BB'},
 	'HID':{'CA':'BB','CG':'SC1','CE1':'SC2','CD2':'SC3'},
 	'HIE':{'CA':'BB','CG':'SC1','CE1':'SC2','CD2':'SC3'},
+	'HSE':{'CA':'BB','CG':'SC1','CE1':'SC2','CD2':'SC3'},
 	'HIP':{'CA':'BB','CG':'SC1','CE1':'SC2','CD2':'SC3'},
 	'HIS':{'CA':'BB','CG':'SC1','CE1':'SC2','CD2':'SC3'},
 	'ILE':{'CA':'BB','CG1':'SC1'},
@@ -22,9 +23,11 @@ amino_map = {
 	'PHE':{'CA':'BB','CG':'SC1','CE1':'SC2','CE2':'SC3'},
 	'PRO':{'CA':'BB','CG':'SC1'},
 	'SER':{'CA':'BB','OG':'SC1'},
+	'SEP':{'CA':'BB','P':'SC1'},
 	'THR':{'CA':'BB','CB':'SC1'},
 	'TRP':{'CA':'BB','CG':'SC1','NE1':'SC2','CE3':'SC3','CH2':'SC4'},
 	'TYR':{'CA':'BB','CD1':'SC1','CD2':'SC2','CZ':'SC3'},
 	'VAL':{'CA':'BB','CB':'SC1'},
-	'CYF':{'C':'BB','SG':'SC1','CL':'F1','CO':'F2','CU':'F3','CW':'F4'}
+#	'CYF':{'C':'BB','SG':'SC1','CL':'F1','CO':'F2','CU':'F3','CW':'F4'}
+	'CYF':{'C':'BB','SG':'C1','CK':'C2','CP':'C3','CU':'C4','CM':'C5','CR':'C6','CW':'C7'}
 }

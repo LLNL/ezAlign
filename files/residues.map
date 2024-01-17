@@ -4,11 +4,30 @@
 #   AT_ind1 AT_ind2 AT_ind3 ...
 
 # NOTE: AT_ind# starts at 1, not 0
+# NOTE: Unmapped CG beads can be specified with "-"
 # NOTE: cmd-line specified mappings take precedence
 # NOTE: Earliest mapping takes precedence
+# NOTE: If a residue's mapping is changed (ex. Martini 2
+#       CHOL to Martini 3 CHOL) ensure the corresponding
+#       .itp position restraints get overwritten
+#       using the ezAlign.py option --overwrite_posres
 
 
-#####   Mappings   #####
+#####   MARTINI 3  #####
+
+#DLPE SAPE
+#1 11 27 22 83 95 107 122 39 51 63 73
+
+#SAP6 SAPI
+#28 5 16 - 30 12 19 41 50 58 68 77 86 95 105 117 123 138
+
+#SSM PSM
+#1 20 32 80 38 49 61 73 85 97 108 121
+
+#CHOL CHOL
+#2 9 44 34 18 39 26 50 65
+
+#####   MARTINI 2   #####
 
 POPC POPC
 1 20 31 40 51 60 76 88 95 107 119 131

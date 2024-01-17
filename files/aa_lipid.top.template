@@ -1,12 +1,11 @@
 #include "./files/charmm36-jul2017.ff/forcefield.itp"
-#include "./files/charmm_other.prm"
 #include "./files/charmm36-jul2017.ff/tip3p.itp"
 #include "./files/charmm36-jul2017.ff/ions.itp"
 
 
 [ system ]
 ; name
-INSANE! Membrane UpperLeaflet>DMPG:DMLPG:TMCL2=54.0:36.0:10.0 LowerLeaflet>DMPG:DMLPG:TMCL2=54.0:36.0:10.0
+ezAligned
 
 [ molecules ]
 ; name  number

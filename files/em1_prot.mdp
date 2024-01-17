@@ -3,7 +3,7 @@ integrator               = steep
 define                   = -DPOSRES_PROT_SOFT
 ; Start time and timestep in ps
 tinit                    = 0
-nsteps                   = 50000
+nsteps                   = 50
 ; mode for center of mass motion removal
 comm-mode                = Linear
 ; number of steps for center of mass motion removal
@@ -13,7 +13,7 @@ comm-grps                =
 
 ; ENERGY MINIMIZATION OPTIONS
 ; Force tolerance and initial step-size
-emtol                    = 100
+emtol                    = 1000
 
 ; OUTPUT CONTROL OPTIONS
 ; Output frequency for coords (x), velocities (v) and forces (f)

@@ -4,6 +4,7 @@ import subprocess
 import os
 import time
 import shutil
+import math
 import re
 import sys
 import warnings
@@ -15,7 +16,7 @@ from MDAnalysis.analysis.rms import rmsd
 import argparse
 from collections import OrderedDict
 
-PDBFMTSTR='ATOM  {!s:>5.5} {:>4s} {:>3s} X{!s:>4.4}    {:>8.3f}{:>8.3f}{:>8.3f}                          \n'
+PDBFMTSTR='ATOM  {!s:>5.5} {:<4s} {:<4s}X{!s:>4.4}    {:>8.3f}{:>8.3f}{:>8.3f}                         \n'
 
 # calls the gromacs executable and errors if it failed
 # nt allows custom arg.cex -n for debugging
@@ -49,6 +50,13 @@ def get_residue_maps(BaseDir,args):
 	file_to_resmap(maps,map_file)
 	return maps
 
+# Returns the mapping index for x
+def map_ind(x):
+	if x == '-':
+		return float('nan')
+	else:
+		return int(x)
+
 # Updates maps keyed by
 # the CG resname read from map_file
 # earliest entry takes precedence
@@ -71,7 +79,7 @@ def file_to_resmap(maps,map_file):
 		j += 1
 		line = lines[j]
 		line = re.split('[ ,\t\n]+',' ' + line)
-		indices = tuple(int(x) for x in line[1:-1])
+		indices = tuple(map_ind(x) for x in line[1:-1])
 		my_map.append(indices)
 		if CG_resname not in maps:
 			maps[CG_resname] = my_map
@@ -115,15 +123,18 @@ def write_pos_restraints(resmap,BaseDir,args):
                 '; ai  funct  fcx    fcy    fcz\n']
 	fpos = 1000 # kJ/mol/nm^2
 	fpos_soft = 10 # kJ/mol/nm^2
+	posstr = "{:>6d}     1     {:d}   {:d}   {:d}\n"
 	for j in resmap[1]:
-		posres_line = "{:>6d}     1     {:d}   {:d}   {:d}\n".format(
-			j,fpos,fpos,fpos)
-		softres_line = "{:>6d}     1     {:d}   {:d}   {:d}\n".format(
-			j,fpos_soft,fpos_soft,fpos_soft)
-		posres_bufflist.append(posres_line)
-		softres_bufflist.append(softres_line)
+		if not math.isnan(j):
+			posres_line = posstr.format(
+				j,fpos,fpos,fpos)
+			softres_line = posstr.format(
+				j,fpos_soft,fpos_soft,fpos_soft)
+			posres_bufflist.append(posres_line)
+			softres_bufflist.append(softres_line)
 	posres_bufflist.append('#endif\n')
 	softres_bufflist.append('#endif\n')
+	overwrite_posres = args.overwrite_posres
 	try:
 		j = buff.index("\n#ifdef POSRES")
 		k = buff.index('\n',j+1)+1
@@ -132,8 +143,8 @@ def write_pos_restraints(resmap,BaseDir,args):
 		k = buff.index('\n',k)+1
 		pos_buff = "{:d}   {:d}   {:d}\n".format(fpos,fpos,fpos)
 		n = len(pos_buff)
-		if buff[k-n:k] == pos_buff:
-			return
+		if buff[k-n:k] != pos_buff:
+			overwrite_posres = True
 		k = buff.index("\n#ifdef SOFTRES",k)
 		k = buff.index('\n',k+1)+1
 		k = buff.index('\n',k)+1
@@ -141,10 +152,13 @@ def write_pos_restraints(resmap,BaseDir,args):
 		k = buff.index('\n',k)+1
 		pos_buff = "{:d}   {:d}   {:d}\n".format(fpos_soft,fpos_soft,fpos_soft)
 		n = len(pos_buff)
-		if buff[k-n:k] == pos_buff:
-			return
+		if buff[k-n:k] != pos_buff:
+			overwrite_posres = True
 	except:
 		j = None
+		overwrite_posres = True
+	if overwrite_posres == False:
+		return
 	bufflist = [buff[:j]] + posres_bufflist + softres_bufflist
 	buff = ''.join(bufflist)
 	with open(filename,'w') as myfile:
@@ -362,6 +376,7 @@ def init():
 	parser.add_argument("-gex",default="gmx",help="GROMACS executable")
 	parser.add_argument("-cex",default='',help="Cluster scheduler executable (eg. srun). Prefixes gromacs mdrun commands.")
 	parser.add_argument("-suff",default='',help="Suffix to provide gmx mdrun commands (eg. \"-nb gpu\").")
+	parser.add_argument("--overwrite_posres",action='store_true',help="Force overwrite position restraints for molecules in $EZALIGN_BASE/files. Useful if a residue's mapping has been modified.")
 	parser.add_argument("--keep",action='store_true',help="For debugging purposes.  Retains the ezAlign working directory '.ezAlign'.")
 	args=parser.parse_args()
 
@@ -380,6 +395,39 @@ def init():
 		print("Using only 1 thread...")
 	return args
 
+# generates strings from mapping indices
+def maps_to_strs(aa_inds,cg_inds):
+	N = len(aa_inds)
+	cg_list = []
+	aa_list = []
+	for j in range(N):
+		if not math.isnan(aa_inds[j]):
+			aa_list.append(str(aa_inds[j]))
+			cg_list.append(str(cg_inds[j] + 1))
+	aa_str = ' '.join(aa_list)
+	cg_str = ' '.join(cg_list)
+	return (aa_str, cg_str)
+
+#converts aa_map to returned aa_dict
+#such that aa_dict[aa_ind] = cg_ind
+#Note: aa_ind is 1-indexed, while
+# cg_ind is 0-index
+#Note: aa_map is a list, and
+#aa_map[cg_ind] = aa_ind, while
+#aa_dict[aa_ind] = cg_ind
+def aa_map_to_dict(aa_map):
+	aa_dict = dict()
+	N = len(aa_map)
+	offset = 0
+	for j in range(N):
+		if not math.isnan(aa_map[j]):
+			aa_dict[aa_map[j]] = j + offset
+		else:
+			offset -= 1
+	return aa_dict
+
+# Core ezAlign function, runs in RunDir.
+# Outputs args.o (.pdb, .cpt, .top) files.
 def ezAlign(args):
 	RunDir = ".ezAlign"
 	prot_molname = ""
@@ -468,21 +516,19 @@ def ezAlign(args):
 	subprocess.call("cat "+args.pdbfile+" | grep CRYST > lipid.pdb",shell=True)
 	subprocess.call("cat "+args.pdbfile+" | grep CRYST > lipid_pos.pdb",shell=True)
 	
-	try:
-		OF = open("log.dat", 'w')
-		OFlipid = open("lipid.pdb", 'a')
-		OFlipidPos = open("lipid_pos.pdb", 'a')
-	except IOError:
-		exit(2)
 	###########################################################
 	###### Align lipids and write positions and restraints ####
 	###########################################################
 	k=1
+	bufflist_lipid = []
+	bufflist_lipidpos = []
 	if args.d is not None:
 		cmdline_res = re.split('[/.]',args.d)[-2][4:]
 	for j in range(len(all_lipids.residues)):
 		aa_lipid = lipids[all_lipids.residues[j].resname][0]
 		aa_map = lipids[all_lipids.residues[j].resname][1]
+		aa_str, cg_str = maps_to_strs(aa_map,
+			all_lipids.residues[j].atoms.ix)
 		if args.d is not None:
 			if aa_lipid == cmdline_res:
 				template_AA= mda.Universe("one_"+aa_lipid+".pdb",in_memory=True)
@@ -492,47 +538,47 @@ def ezAlign(args):
 			template_AA= mda.Universe(BaseDir+"/files/one_"+aa_lipid+".pdb",in_memory=True)
 		template_AA.dimensions =  all_CG.dimensions
 		template_AA.atoms.masses  += 72
-		cg_str = (" ".join(str(x+1) for x in all_lipids.residues[j].atoms.ix))
-		aa_str = (" ".join(str(x) for x in aa_map))
-		for i in range(len(aa_map)):
-			if i == 0:
-				sub_template_AA = template_AA.select_atoms('bynum ' + str(aa_map[i]))
-			else:
-				sub_template_AA += template_AA.select_atoms('bynum ' + str(aa_map[i]))
-			sub_CG = all_CG.select_atoms('bynum ' + str(cg_str))
+		sub_AA = template_AA.atoms[[]]
+		for j in range(len(aa_map)): # to preserve order
+			if not math.isnan(aa_map[j]):
+				sub_AA += template_AA.select_atoms('bynum '
+					+ str(aa_map[j]))
+		sub_CG = all_CG.select_atoms('bynum ' + cg_str)
 		cg_com = sub_CG.center(weights=None)
-		aa_com = sub_template_AA.center(weights=None)
+		aa_com = sub_AA.center(weights=None)
 		cg_coord = sub_CG.positions - cg_com
-		aa_coord = sub_template_AA.positions - aa_com
+		aa_coord = sub_AA.positions - aa_com
 		R, min_rmsd = align.rotation_matrix(aa_coord, cg_coord)
 		template_AA.atoms.translate(-aa_com)
 		template_AA.atoms.rotate(R)
 		template_AA.atoms.translate(cg_com)
-		old_pos = template_AA.atoms.positions
+		aa_pos = template_AA.atoms.positions
 	#################################### 
 	###         PRINT REF CG         ###  
 	####################################
-		sel2 = all_CG.select_atoms('bynum '+cg_str)
-		template_POS = template_AA
-		cross_AA = template_POS.atoms.positions
-		for k in range(len(aa_map)):
-			cross_AA[((aa_map[k])-1),:] = sel2.atoms.positions[(k),:]	
-		template_POS.atoms.positions = cross_AA
-		i = 0
-		for i in range(len(template_POS.atoms.positions)):
-			OFlipid.write(PDBFMTSTR.format(
-				k,'CH','LIP',4, old_pos[i][0], 
-				old_pos[i][1], old_pos[i][2]))
-			OFlipidPos.write(PDBFMTSTR.format(
-				k,'CH','LIP',4,template_POS.atoms.positions[i][0],
-				template_POS.atoms.positions[i][1],
-				template_POS.atoms.positions[i][2]))
+		aa_dict = aa_map_to_dict(aa_map)
+		for i in range(len(aa_pos)):
+			aa_name = template_AA.atoms[i].name
+			aa_resid = template_AA.atoms[i].resid
+			bufflist_lipid.append(PDBFMTSTR.format(
+				k,aa_name,aa_lipid,aa_resid, 
+				*aa_pos[i]))
+			if i + 1 in aa_dict:
+				cg_name = sub_CG.atoms[aa_dict[i+1]].name
+				bufflist_lipidpos.append(PDBFMTSTR.format(
+					k,cg_name,aa_lipid,aa_resid,
+					*sub_CG.atoms.positions[aa_dict[i+1]]))
+			else:
+				bufflist_lipidpos.append(PDBFMTSTR.format(
+					k,aa_name,aa_lipid,aa_resid,
+					*aa_pos[i]))
 			k += 1
-
-	OFlipid.write("TER\n ENDMDL\n")
-	OFlipidPos.write("TER\n ENDMDL\n")
-	OFlipid.close()
-	OFlipidPos.close()
+	bufflist_lipid.append("TER\nENDMDL\n")
+	bufflist_lipidpos.append("TER\nENDMDL\n")
+	with open("lipid.pdb",'a') as f:
+		f.write(''.join(bufflist_lipid))
+	with open("lipid_pos.pdb",'a') as f:
+		f.write(''.join(bufflist_lipidpos))
 	
 	#####################################
 	##### EM ALL LIPIDS WITH POS RES ####
@@ -568,18 +614,12 @@ def ezAlign(args):
 		write_prot_posres(aa_CA,cg_CA,aa_protein_template,all_CG)
 		write_prot_top(prot_molname)
 		box = all_CG.dimensions[:3] * 0.1
-		call_gromacs(args,'editconf -f EZALIGNED_TEMPLATE_AA_prot.pdb -o aa_prot1.gro -box {:.3f} {:.3f} {:.3f}'.format(*box))
+		call_gromacs(args,'editconf -f EZALIGNED_TEMPLATE_AA_prot.pdb -o aa_prot1.gro -box {:.3f} {:.3f} {:.3f} -noc'.format(*box))
 		call_gromacs(args,'grompp -f '+BaseDir+'/files/em1_prot.mdp -c aa_prot1.gro -r posres_prot.pdb -p aa_prot.top -o em1_prot -maxwarn 34')
 		call_gromacs(args,'mdrun -deffnm em1_prot -c em1_prot.pdb')#,nt=1)
 		call_gromacs(args,'grompp -f '+BaseDir+'/files/md1_prot.mdp -c em1_prot.pdb -r posres_prot.pdb -p aa_prot.top -o md1_prot -maxwarn 34')
 		call_gromacs(args,'mdrun -deffnm md1_prot -c md1_prot.pdb')
-		subprocess.call('cat em1_prot.pdb | grep ATOM >> full_system.pdb', shell=True)
-
-	try:
-		OF2 = open("full_system.pdb", 'a')
-		OF3 = open("ions.pdb", 'w')
-	except IOError:
-		exit(2)
+		subprocess.call('cat md1_prot.pdb | grep ATOM >> full_system.pdb', shell=True)
 
 	###############################################
 	### For Water:print four waters at beads COM ##
@@ -589,16 +629,20 @@ def ezAlign(args):
 	k=1
 	num_water=0
 	water_AA = mda.Universe(BaseDir+"/files/aa_water.pdb",in_memory=True)
-	for residue in water_CG.residues:
-		water_new = water_AA.atoms.positions + (residue.atoms.positions -  np.average(water_AA.atoms.positions)) 
+	n_CGW = water_CG.positions.shape[0]
+	aa_cog = np.average(water_AA.atoms.positions)
+	bufflist_waters = []
+	for j in range(n_CGW):
+		water_new = water_AA.atoms.positions + (water_CG.positions[j] - aa_cog) 
 		for j in range(12):
-			OF2.write(PDBFMTSTR.format(
+			bufflist_waters.append(PDBFMTSTR.format(
 				k,'OH','SOL',4, water_new[j][0], 
 				water_new[j][1], water_new[j][2]))
 			k += 1
 		i += 1
 		num_water += 4
-	OF2.close()
+	with open("full_system.pdb",'a') as f:
+		f.write(''.join(bufflist_waters))
 
 	##################################
 	###          Add IONS          ###
@@ -609,26 +653,33 @@ def ezAlign(args):
 	num_NA=0
 	num_CL=0
 	ion_AA = mda.Universe(BaseDir+"/files/aa_water_ion.pdb",in_memory=True)
-	for residue in ions_CG.residues:
-		ion_new = ion_AA.atoms.positions + (residue.atoms.positions - np.average(ion_AA.atoms.positions))
-		for j in range(12):
-			OF3.write(PDBFMTSTR.format(
-				k,'OH','SOL',4,ion_new[j][0], 
-				ion_new[j][1],ion_new[j][2]))
+	ion_AA_cog = np.average(ion_AA.atoms.positions)
+	n_CGI = ions_CG.positions.shape[0]
+	pnames = {'Na','Na+','NA+','SOD','NA'}
+	nnames = {'Cl','Cl-','CL-','CLA','CL'}
+	bufflist_ions = []
+	for j in range(n_CGI):
+		ion_new = ion_AA.atoms.positions + (ions_CG.positions[j] - ion_AA_cog)
+		for l in range(12):
+			bufflist_ions.append(PDBFMTSTR.format(
+				k,'OH','SOL',4,ion_new[l][0], 
+				ion_new[l][1],ion_new[l][2]))
 			k += 1
 		num_water += 4
-		OF3.write(PDBFMTSTR.format(
+		bufflist_ions.append(PDBFMTSTR.format(
 			k,'OH','ION',4,ion_new[12][0], 
 			ion_new[12][1],ion_new[12][2]))
 		i += 1
-		if residue.atoms.names == 'Na' or residue.atoms.names  == 'Na+' or residue.atoms.names == 'NA+' or residue.atoms.names == 'SOD'or residue.atoms.names == 'NA':
+		if (ions_CG[j].name in pnames):
 			num_NA += 1
-		elif residue.atoms.names == 'Cl' or residue.atoms.names == 'Cl-' or residue.atoms.names == 'CL-' or residue.atoms.names == 'CLA'or residue.atoms.names == 'CL':
+		elif (ions_CG[j].name in nnames):
 			num_CL +=1
 		else:
 			print("NOT RIGHT ION\n")
-
-	OF3.close()
+			assert(0)	
+	with open("ions.pdb",'w') as f:
+		f.write(''.join(bufflist_ions))
+	
 	subprocess.call('cat ions.pdb | grep SOL >> full_system.pdb', shell=True)
 	subprocess.call('cat ions.pdb | grep ION >> full_system.pdb', shell=True)
 	subprocess.call('echo TER >> full_system.pdb', shell=True)
