@@ -31,7 +31,7 @@ nstxout-compressed       = 50
 ; cut-off scheme (Verlet: particle based cut-offs, group: using charge groups)
 cutoff-scheme            = Verlet
 ; nblist update frequency
-nstlist                  = 20
+nstlist                  = 10
 ; ns algorithm (simple or grid)
 ns_type                  = grid
 ; Periodic boundary conditions: xyz, no, xy
@@ -39,19 +39,29 @@ pbc                      = xyz
 periodic-molecules       = no
 ; Allowed energy error due to the Verlet buffer in kJ/mol/ps per atom,
 ; a value of -1 means: use rlist
-verlet-buffer-tolerance  = 0.005
+verlet-buffer-tolerance  = -1
 ; nblist cut-off        
-rlist                    = 1.2
+rlist                    = 0.1
 
 ; OPTIONS FOR ELECTROSTATICS AND VDW
 ; Method for doing electrostatics
 coulombtype              = cut-off
-rcoulomb                 = 1.2
+rcoulomb                 = 0.1
 ; Method for doing Van der Waals
 vdw_type                 = cutoff
-rvdw                     = 1.2
+rvdw                     = 0.1
 DispCorr                 = No
 
 ; OPTIONS FOR BONDS    
 constraints              = none
 
+; Free energy variables
+free-energy              = yes
+couple-moltype           = System
+couple-lambda0           = vdw-q
+couple-lambda1           = none
+couple-intramol          = yes
+init-lambda              = 1
+delta-lambda             = 0
+sc-alpha                 = 1E3
+nstdhdl                  = 0

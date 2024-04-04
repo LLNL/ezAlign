@@ -1,15 +1,15 @@
 integrator               = md
-define                   = -DPOSRES_PROT_SOFT
-nsteps                   = 100000
+define                   = -DPOSRES_PROT
+nsteps                   = 10000
 dt                       = 0.0002
 comm-mode                = Linear
 nstcomm                  = 100
 
 nstxout                  = 0
-nstlog                   = 1000
-nstcalcenergy            = 1000
-nstenergy                = 1000
-nstxout-compressed       = 1000
+nstlog                   = 100
+nstcalcenergy            = 100
+nstenergy                = 100
+nstxout-compressed       = 100
 
 cutoff-scheme            = Verlet
 nstlist                  = 10

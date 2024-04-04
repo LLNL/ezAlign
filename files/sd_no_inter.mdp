@@ -1,24 +1,24 @@
 define                  = -DPOSRES
 integrator              = sd
-dt                      = 0.0002
-nsteps                  = 500
-nstlog                  = 5000
+dt                      = 0.002
+nsteps                  = 10000
+nstlog                  = 1000
 nstxout                 = 0
 nstvout                 = 0
 nstfout                 = 0
-nstxtcout               = 50
+nstxtcout               = 1000
 nstcalcenergy           = 1000
 nstenergy               = 1000
 ;
 cutoff-scheme           = Verlet
-nstlist                 = 200
-rlist                   = 0.5
+nstlist                 = 10
+rlist                   = 0.1
 coulombtype             = Cut-off
-rcoulomb                = 0.5
+rcoulomb                = 0.1
 vdwtype                 = Cut-off
 ;vdw-modifier            = Force-switch
 ;rvdw_switch             = 0.8
-rvdw                    = 0.5
+rvdw                    = 0.1
 ;
 tcoupl                  = No
 tc_grps                 = System
@@ -49,8 +49,8 @@ free-energy              = yes
 couple-moltype           = System
 couple-lambda0           = vdw-q
 couple-lambda1           = none
-couple-intramol          = no
+couple-intramol          = yes
 init-lambda              = 1
 delta-lambda             = 0
-nstdhdl                  = 50
-
+sc-alpha                 = 1E3
+nstdhdl                  = 0

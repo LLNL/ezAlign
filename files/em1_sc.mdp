@@ -1,4 +1,4 @@
-;define                   = -DPOSRES_PROT
+define                   = -DPOSRES_PROT
 
 ; RUN CONTROL PARAMETERS
 integrator               = steep
@@ -42,3 +42,4 @@ couple-intramol          = yes
 couple-lambda0           = vdw-q
 couple-lambda1           = none
 init-lambda              = 1
+nstdhdl                  = 0

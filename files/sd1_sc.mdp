@@ -43,4 +43,4 @@ couple-lambda0           = vdw-q
 couple-lambda1           = none
 init-lambda              = 1
 delta-lambda             = -0.002
-
+nstdhdl                  = 0

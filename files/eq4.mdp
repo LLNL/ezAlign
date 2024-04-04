@@ -2,13 +2,13 @@ integrator              = md
 define                  = 
 dt                      = 0.002
 nsteps                  = 5000
-nstlog                  = 5000
+nstlog                  = 50
 nstxout                 = 0
 nstvout                 = 0
 nstfout                 = 0
 nstxtcout               = 5000
-nstcalcenergy           = 1000
-nstenergy               = 1000
+nstcalcenergy           = 50
+nstenergy               = 50
 ;
 cutoff-scheme           = Verlet
 nstlist                 = 20
@@ -21,12 +21,13 @@ rvdw_switch             = 1.0
 rvdw                    = 1.2
 ;
 tcoupl                  = v-rescale
+nsttcouple              = 10
 tc_grps                 = Bilayer   SOL_ION
 tau_t                   = 1.0    1.0
 ref_t                   = 313    313
 ;
 ;pcoupl                  = berendsen
-pcoupl                  = Parrinello-Rahman
+pcoupl                  = C-rescale
 pcoupltype              = semiisotropic
 tau_p                   = 5.0
 compressibility         = 4.5e-5  4.5e-5
