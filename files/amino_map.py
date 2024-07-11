@@ -14,6 +14,8 @@ amino_map = {
 	'HID':{'CA':'BB','CG':'SC1','CE1':'SC2','CD2':'SC3'},
 	'HIE':{'CA':'BB','CG':'SC1','CE1':'SC2','CD2':'SC3'},
 	'HSE':{'CA':'BB','CG':'SC1','CE1':'SC2','CD2':'SC3'},
+	'HSD':{'CA':'BB','CG':'SC1','CE1':'SC2','CD2':'SC3'},
+	'HSP':{'CA':'BB','CG':'SC1','CE1':'SC2','CD2':'SC3'},
 	'HIP':{'CA':'BB','CG':'SC1','CE1':'SC2','CD2':'SC3'},
 	'HIS':{'CA':'BB','CG':'SC1','CE1':'SC2','CD2':'SC3'},
 	'ILE':{'CA':'BB','CG1':'SC1'},
@@ -30,4 +32,15 @@ amino_map = {
 	'VAL':{'CA':'BB','CB':'SC1'},
 #	'CYF':{'C':'BB','SG':'SC1','CL':'F1','CO':'F2','CU':'F3','CW':'F4'}
 	'CYF':{'C':'BB','SG':'C1','CK':'C2','CP':'C3','CU':'C4','CM':'C5','CR':'C6','CW':'C7'}
+}
+
+# Protein-associated residue map
+# CG and AA resname must be the same here
+passoc_map = {
+	'CGW':{'OW':'CGW','OH2':'CGW'},
+	'ZN2':{'ZN':'ZN'},
+	'MG':{'MG':'MG'},
+	'ATP':{'PEnd':'PG','PB':'PB','PA':'PA','C5\'':'RB1','C3\'':'RB2','C1\'':'SC1','C8':'SC2','C5':'SC3','C6':'SC4','N3':'SC5'},
+	'GTP':{'PEnd':'PG','PB':'PB','PA':'PA','C5\'':'RB1','C3\'':'RB2','C1\'':'SC1','C8':'SC2','C5':'SC3','C6':'SC4','N3':'SC5'}
+
 }

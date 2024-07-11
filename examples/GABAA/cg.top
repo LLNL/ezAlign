@@ -1,0 +1,16 @@
+#include "/usr/workspace/bcwc/Ion_Channel_MD/CG_PARAM/martini.itp"  
+#define RUBBER_BANDS 
+#include "cg_prot.itp" 
+
+[ system ]
+; name
+Protein in INSANE! Membrane UpperLeaflet>POPC=1.0 LowerLeaflet>POPC=1.0
+
+[ molecules ]
+; name  number
+Protein        1
+POPC           266
+POPC           276
+W            14941
+NA+            154
+CL-            174

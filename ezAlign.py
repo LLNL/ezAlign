@@ -281,18 +281,9 @@ def get_aa_CA(aa_protein_template):
 			resids[j] = sels[j].resids[selinds[j]]
 	return sels[0][agslice]
 
-# Writes protein position restraints for relaxation according 
-# to AA and CG names from amino_map.py.  Also writes .itp and pdbs.
-def write_prot_posres(aa_ca_sel,cg_bb_sel,aa_template,cg_template,
-	prot_itp,j_in):
+# Returns aa and cg indices specified by amino_map
+def map_amino(aa_ca_sel,cg_bb_sel,aa_template,cg_template):
 	from files.amino_map import amino_map
-	posres_bufflist = ['\n#ifdef POSRES_PROT\n',
-		'[ position_restraints ]\n',
-		'; ai  funct  fcx    fcy    fcz\n']
-	posres2_bufflist = ['\n#ifdef POSRES_PROT_SOFT\n',
-		'[ position_restraints ]\n',
-		'; ai  funct  fcx    fcy    fcz\n']
-	pdb_bufflist = []
 	aa_ref_ixs = []
 	cg_ref_ixs = []
 	for j in range(aa_ca_sel.n_atoms):
@@ -306,6 +297,92 @@ def write_prot_posres(aa_ca_sel,cg_bb_sel,aa_template,cg_template,
 				cg_template)
 			aa_ref_ixs.append(aa_index)
 			cg_ref_ixs.append(cg_index)
+	return aa_ref_ixs,cg_ref_ixs
+
+# Returns aa and cg indices specified by passoc_map
+# starting from cg index k. Also returns new k.
+def map_passoc(aa_template,cg_template,k):
+	from files.amino_map import passoc_map
+	aa_ixs = []
+	cg_ixs = []
+	n_aa = len(aa_template.atoms)
+	n_cg = len(cg_template.atoms)
+	j = 0
+	while j < n_aa:
+		resname = aa_template.atoms[j].resname
+		if (resname in passoc_map):
+			j,k = map_passoc_residue(aa_template,cg_template,
+				aa_ixs,cg_ixs,n_aa,n_cg,passoc_map,j,k)
+		else:
+			j += 1
+	return aa_ixs,cg_ixs,k
+
+# Appends aa_ixs and cg_ixs for an aa residue
+# starting at j, from cg index starting from k0.
+# Returns j (new aa-index starting point).
+# Returns k (new cg-index starting point).
+def map_passoc_residue(aa_template,cg_template,aa_ixs,
+	cg_ixs,n_aa,n_cg,passoc_map,j,k0):
+	resname = aa_template.atoms[j].resname
+	resid = aa_template.atoms[j].resid
+	cur_resid = resid
+	cur_aname = aa_template.atoms[j].name
+	cg_resname = cg_template.atoms[k0].resname
+	while cg_resname != resname:
+		k0 += 1
+		cg_resname = cg_template.atoms[k0].resname
+	while cur_resid == resid:
+		if cur_aname in passoc_map[resname]:
+			aa_ixs.append(aa_template.atoms[j].ix)
+			cg_ixs.append(map_passoc_atom(cg_template,resname,
+				passoc_map[resname][cur_aname],k0))
+		j += 1
+		if j == n_aa:
+			break
+		cur_resid = aa_template.atoms[j].resid
+		cur_aname = aa_template.atoms[j].name
+	k = cg_ixs[-1] + 1
+	cg_resid = cg_template.atoms[cg_ixs[-1]].resid
+	while k < n_cg:
+		cur_cg_resid = cg_template.atoms[k].resid
+		if cur_cg_resid != cg_resid:
+			break
+		k += 1
+	return j,k	
+	
+# returns the index corresponding to resname and
+# aname starting from k
+def map_passoc_atom(template,resname,aname,k):
+	cur_aname = template.atoms[k].name
+	cur_resname = template.atoms[k].resname
+	resid = template.atoms[k].resid
+	cur_resid = resid
+	while cur_resid == resid and cur_resname == resname:
+		if cur_aname == aname:
+			return k
+		k += 1
+		cur_aname = template.atoms[k].name
+		cur_resname = template.atoms[k].resname
+		cur_resid = template.atoms[k].resid
+	assert(0)
+
+# Writes protein position restraints for relaxation according 
+# to AA and CG names from amino_map.py.  Also writes .itp and pdbs.
+def write_prot_posres(aa_ca_sel,cg_bb_sel,aa_template,cg_template,
+	prot_itp,j_in,k_in):
+	posres_bufflist = ['\n#ifdef POSRES_PROT\n',
+		'[ position_restraints ]\n',
+		'; ai  funct  fcx    fcy    fcz\n']
+	posres2_bufflist = ['\n#ifdef POSRES_PROT_SOFT\n',
+		'[ position_restraints ]\n',
+		'; ai  funct  fcx    fcy    fcz\n']
+	pdb_bufflist = []
+	aa_amino_ixs,cg_amino_ixs = map_amino(aa_ca_sel,
+		cg_bb_sel,aa_template,cg_template)
+	aa_passoc_ixs,cg_passoc_ixs,k_out = map_passoc(
+		aa_template,cg_template,k_in)
+	aa_ref_ixs = aa_amino_ixs + aa_passoc_ixs
+	cg_ref_ixs = cg_amino_ixs + cg_passoc_ixs
 	zipped = list(zip(aa_ref_ixs,cg_ref_ixs))
 	sortedzip = sorted(zipped,key=lambda x: x[0])
 	aa_ref_ixs, cg_ref_ixs = zip(*sortedzip)
@@ -345,6 +422,7 @@ def write_prot_posres(aa_ca_sel,cg_bb_sel,aa_template,cg_template,
 		mode = 'a'
 	with open('posres_prot.pdb',mode) as myfile:
 		myfile.write(''.join(pdb_bufflist))
+	return k_out
 
 # Returns index for name using ref_sel[j]
 # such that index is within the same residue
@@ -352,7 +430,8 @@ def get_index(name,j,ref_sel,template):
 	resid = ref_sel.resids[j]
 	ref_ix = ref_sel[j].ix
 	cur_ix = ref_ix
-	while True:
+	N_atoms = len(template.atoms)
+	while cur_ix < N_atoms:
 		cur_name = template.atoms[cur_ix].name
 		cur_resid = template.atoms[cur_ix].resid
 		if cur_resid != resid:
@@ -402,6 +481,7 @@ def get_contacts(filename):
 		 box=u.dimensions, return_distances=False)
 	return len(badContacts)
 
+# initialization
 def init():
 	parser=argparse.ArgumentParser(prog="ezAlign",
 		description="This program builds all-atom models",
@@ -515,6 +595,7 @@ def align_prots(prot_molnames,prot_itps,all_CG,args,BaseDir):
 	aligned_pdbs = []
 	cg_CA_all = all_CG.select_atoms('name BB')
 	cg_start = 0
+	k = 0
 	for j in range(n_prot):
 		aa_protein_template = mda.Universe(prot_pdbs[j],in_memory=True)
 		aa_CA = get_aa_CA(aa_protein_template)
@@ -533,14 +614,13 @@ def align_prots(prot_molnames,prot_itps,all_CG,args,BaseDir):
 		aligned_pdb = "prot{:d}.pdb".format(j)
 		aa_protein_template.atoms.write(aligned_pdb)
 		aligned_pdbs.append(aligned_pdb)
-		write_prot_posres(aa_CA,cg_CA,aa_protein_template,all_CG,prot_itps[j],j)
+		k = write_prot_posres(aa_CA,cg_CA,aa_protein_template,all_CG,prot_itps[j],j,k)
 	aligned_filename = 'EZALIGNED_TEMPLATE_AA_prot.pdb'
 	combine_pdbs(aligned_pdbs,aligned_filename)
 	write_prot_top(prot_molnames,prot_itps)
 	box = all_CG.dimensions[:3] * 0.1
 	call_gromacs(args,'editconf -f {:s} -o aa_prot1.gro -box {:.3f} {:.3f} {:.3f} -noc'.format(
 		aligned_filename,*box))
-
 	call_gromacs(args,'grompp -f '+BaseDir+'/files/em1_prot.mdp -c aa_prot1.gro -r posres_prot.pdb -p aa_prot.top -o em1_prot -maxwarn 34')
 	call_gromacs(args,'mdrun -deffnm em1_prot -c em1_prot.pdb',nt=1)
 	call_gromacs(args,'grompp -f '+BaseDir+'/files/md1_prot.mdp -c em1_prot.pdb -r posres_prot.pdb -p aa_prot.top -o md1_prot -maxwarn 34')

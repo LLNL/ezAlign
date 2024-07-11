@@ -1,0 +1,15 @@
+#include "../CG_PARAM/martini.itp"
+#include "Protein.itp"
+
+[ system ]
+; name
+Protein in INSANE! Membrane UpperLeaflet>POPC=1.0 LowerLeaflet>POPC=1.0
+
+[ molecules ]
+; name  number
+Protein        1
+POPC           187
+POPC           192
+W            11681
+NA+            135
+CL-            123
