@@ -23,12 +23,22 @@ Input GROMACS topology directives must be specified as `[ directive ]` (not `[di
 ## Arguments
 Execute `ezAlign.py -h` for a brief description of arguments.
 
-## Example
-A working example of CG oleate in a POPC bilayer is provided in the examples folder.  Within the folder, simply execute
+## Examples
+A working example of CG oleate in a POPC bilayer is provided in the examples folder `examples/oleate`.  Within the folder, simply execute
 ```
 ezAlign.py -f input_CG.pdb -p cg.top
 ```
+### Protein examples
+Two single-complex proteins in POPC bilayers, hERG and GABA_A are provided.  Since these systems are larger than the oleate example, you may want to run ezAlign with some parallelization (see arguments `-nt`, `-gex`, and/or `-cex`) for completion within 30 minutes.
 
+For hERG, within `examples/hERG`, execute
+```
+ezAlign.py -f cg.pdb -p cg.top -pi aa_herg.itp -pp aa_herg.pdb
+```
+For GABA_A, within `examples/GABAA`, execute
+```
+ezAlign.py -f cg.pdb -p cg.top -pi aa_prot.itp -pp aa_prot.pdb
+```
 ## Parameterization
 Including parameters for new molecules in ezAlign is fairly straightforward using CHARMM-GUI [3].
 
@@ -48,8 +58,16 @@ Including parameters for new molecules in ezAlign is fairly straightforward usin
 BOL BOL
 3
 ```
-
 which maps the single martini CG bead to the central carbon (C3) of atomistic butanol.
+
+## Protein backmapping
+The ezAlign program currently supports both single-complex protein and multi-complex protein systems via the `-pi` and `-pp` options.  To map a single-complex protein system, simply specify `-pi` with the .itp file of the protein complex and `-pp` with the template .pdb file of the protein complex, which is aligned and relaxed into the CG conformation.  Proteins within a single-complex are aligned together during the initial rigid alignment.  If the proteins' relative positions are expected to deviate significantly from the provided template structure specified with `-pp`, it is advised to treat each protein as an independent complex, following the multi-complex protein insctructions in the section below. See the "Protein examples" section above for provided single-complex protein systems.  Note the name of the protein complex in the `[ molecules ]` directive of the CG .top file provided to `-p` should match the name of the protein complex specified by the `[ moleculetype]` directive in the .itp file provided to `-pi`.
+
+### Multi-complex proteins
+To backmap multiple protein complexes with ezAlign, specify `-pi` and `-pp` with .txt files that list full paths of each complex's .itp and template .pdb, respectively, delimited by newlines.  Each protein complex is independently aligned during the initial rigid alignment.  The names of each protein complex in the `[ molecules ]` directive of the CG .top file provided to `-p` should match the names of the protein complexes specified by the `[ moleculetype]` directive in the .itp files provided to `-pi`.  The ordering of the protein complexes should be consistent across `-p`, `-pi`, and `-pp`.
+
+### Non-standard amino acids and protein-associated residues
+Both non-standard amino acids and protein-associated residues are supported via modification of `$EZALIGN_BASE/files/amino_map.py`.  Simply add a corresponding entry to the `amino_map` python dictionary, following the format specification at the top of the file.  To add a protein-associated residue, similarly add a corresponding entry to the `passoc_map` python dictionary.  Note that protein-associated residues are residues that are included in the protein structure and topology files provided to `-pp` and `-pi`, respectively.  During rigid alignment, protein-associated residues are aligned with their corresponding protein complexes.  If a protein-associated residue is expected to deviate significantly from its relative position specified in `-pp`, consider specifying the residue as an independent molecule instead (see the "Parameterization" section above).
 
 ## References
 1. Bennett, W. F. D., Bernardi, A., Fox, S. J., Sun, D., & Maupin, C. M. (2022) Converting Coarse Grained Molecular Dynamics Structures to Atomistic Resolution for Multiscale Modelling (in prep.)
