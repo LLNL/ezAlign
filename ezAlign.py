@@ -635,6 +635,7 @@ def align_prots(prot_molnames,prot_itps,all_CG,args,BaseDir):
 def ezAlign(args):
 	RunDir = ".ezAlign"
 	prot_molnames = []
+	prot_itps = []
 	
 	if os.path.isdir(RunDir):
 		shutil.rmtree(RunDir)
