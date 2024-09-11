@@ -10,7 +10,9 @@ Independent atomistic coordinates and topologies for every molecule must already
 * Python 3.x
 * MDAnalysis 2.x.x or greater
 * numpy 1.20.x or greater
-* GROMACS 2022 or later
+* GROMACS 2022.x or 2023.x
+
+Note: Gromacs 2024 has changed the minimum allowed short-range cutoffs, so some of ezAlign's .mdp files need to be adjusted to use it.
 
 ### Topology requirements
 Input GROMACS topology directives must be specified as `[ directive ]` (not `[directive]`).

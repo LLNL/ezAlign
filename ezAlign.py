@@ -630,99 +630,10 @@ def align_prots(prot_molnames,prot_itps,all_CG,args,BaseDir):
 	subprocess.call('cat md2_prot.pdb | grep ATOM >> full_system.pdb', shell=True)
 
 
-# Core ezAlign function, runs in RunDir.
-# Outputs args.o (.pdb, .cpt, .top) files.
-def ezAlign(args):
-	RunDir = ".ezAlign"
-	prot_molnames = []
-	prot_itps = []
-	
-	if os.path.isdir(RunDir):
-		shutil.rmtree(RunDir)
-	os.mkdir(RunDir)
-	
-	shutil.copy(args.pdbfile,RunDir + '/' + "input_CG.pdb")
-	shutil.copy(args.topfile,RunDir + '/' + "cg.top")
-	if args.m is not None:
-		shutil.copy(args.m,RunDir)
-	if args.d is not None:
-		shutil.copy(args.d,RunDir)
-	if args.t is not None:
-		shutil.copy(args.t,RunDir)
-	if args.pi is not None and args.pi[-4:] == ".txt":
-		copyfilelist(args.pi,RunDir)
-		copyfilelist(args.pp,RunDir)
-		prot_molnames,prot_itps = get_molnames(args.pi)
-	elif args.pi is not None:
-		shutil.copy(args.pi,RunDir)
-		prot_molnames = {get_molname(args.pi)}
-		prot_itps = [re.split('/',args.pi)[-1]]
-	if args.pp is not None:
-		shutil.copy(args.pp,RunDir)
-	if args.tt is not None:
-		shutil.copy(args.tt,RunDir+'/'+"aa_lipid.top")
-	
-	os.chdir(RunDir)
-	args.pdbfile = "input_CG.pdb"
-	args.topfile = "cg.top"
-
-	BaseDir = os.environ["EZALIGN_BASE"]
-	nt=args.threads
-	input_top=args.topfile
-	
-	all_CG = mda.Universe(args.pdbfile,in_memory=True)
-	
-	lipids = get_residue_maps(BaseDir,args)
-	for resmap in lipids.values():
-		write_pos_restraints(resmap,BaseDir,args)
-	lipids_str = (" ".join(str(x) for x in lipids.keys()))
-	all_lipids = all_CG.select_atoms("resname "+lipids_str)
-
-	cg_resnames = set(OrderedDict.fromkeys(
-		all_CG.residues.resnames))
-
-	cg_resnames = cg_resnames & set(lipids.keys())
-	aa_resnames = set()
-	for cg_resname in cg_resnames:
-		aa_resnames.add(lipids[cg_resname][0])
-
-	####################################################
-	###### Write top files and other files set-up  #####
-	####################################################
-	
-	if args.tt is None:
-		os.system("cp "+BaseDir+"/files/aa_lipid.top.template aa_lipid.top")
-
-	include_itps("aa_lipid.top",aa_resnames,BaseDir,args)
-	os.system("sed -i 's|\"./files|\""+BaseDir+"/files|g' aa_lipid.top")
-	
-	fin_top=open(input_top,"r")
-	fout=open("aa_lipid.top","a")
-	start_read = 0
-	for line in fin_top:
-		if "[ molecules ]" in line:
-			start_read=1
-			continue
-		if start_read:
-			data=line.strip().split()
-			if len(data) and not line.startswith(";"):
-				if (data[0]!="W" and data[0]!="WF" and 
-					data[0]!="NA" and data[0]!="Na" and 
-					data[0]!="NA+" and data[0]!="Na+" and 
-					data[0]!="CL" and data[0]!="Cl" and 
-					data[0]!="CL-" and data[0]!="Cl-"):
-					if args.pi is None:
-						fout.write(line)
-					elif data[0] not in prot_molnames:
-						fout.write(line)
-	if start_read != 1:
-		raise RuntimeError('"[ molecules ]" directive in cg topology not found.')
-	fout.write("\n")
-	fout.close()
-	fin_top.close()
-
+# rigid alignment followed by flexible relaxation
+# of lipids and small molecules
+def align_lipids(BaseDir,args,lipids,all_lipids,all_CG):
 	sed_resnames(lipids,"aa_lipid.top")
-
 	subprocess.call("cat "+args.pdbfile+" | grep CRYST > lipid.pdb",shell=True)
 	subprocess.call("cat "+args.pdbfile+" | grep CRYST > lipid_pos.pdb",shell=True)
 	
@@ -803,6 +714,105 @@ def ezAlign(args):
 	
 	subprocess.call('cat t_SD_pbc.pdb | grep CRYST1 > full_system.pdb', shell=True)
 	subprocess.call('cat t_SD_pbc.pdb | grep ATOM >> full_system.pdb', shell=True)
+
+# Core ezAlign function, runs in RunDir.
+# Outputs args.o (.pdb, .cpt, .top) files.
+def ezAlign(args):
+	RunDir = ".ezAlign"
+	prot_molnames = []
+	prot_itps = []
+	
+	if os.path.isdir(RunDir):
+		shutil.rmtree(RunDir)
+	os.mkdir(RunDir)
+	
+	shutil.copy(args.pdbfile,RunDir + '/' + "input_CG.pdb")
+	shutil.copy(args.topfile,RunDir + '/' + "cg.top")
+	if args.m is not None:
+		shutil.copy(args.m,RunDir)
+	if args.d is not None:
+		shutil.copy(args.d,RunDir)
+	if args.t is not None:
+		shutil.copy(args.t,RunDir)
+	if args.pi is not None and args.pi[-4:] == ".txt":
+		copyfilelist(args.pi,RunDir)
+		copyfilelist(args.pp,RunDir)
+		prot_molnames,prot_itps = get_molnames(args.pi)
+	elif args.pi is not None:
+		shutil.copy(args.pi,RunDir)
+		prot_molnames = {get_molname(args.pi)}
+		prot_itps = [re.split('/',args.pi)[-1]]
+	if args.pp is not None:
+		shutil.copy(args.pp,RunDir)
+	if args.tt is not None:
+		shutil.copy(args.tt,RunDir+'/'+"aa_lipid.top")
+	
+	os.chdir(RunDir)
+	args.pdbfile = "input_CG.pdb"
+	args.topfile = "cg.top"
+
+	BaseDir = os.environ["EZALIGN_BASE"]
+	nt=args.threads
+	input_top=args.topfile
+	
+	all_CG = mda.Universe(args.pdbfile,in_memory=True)
+	
+	lipids = get_residue_maps(BaseDir,args)
+	for resmap in lipids.values():
+		write_pos_restraints(resmap,BaseDir,args)
+	lipids_str = (" ".join(str(x) for x in lipids.keys()))
+	all_lipids = all_CG.select_atoms("resname "+lipids_str)
+
+	cg_resnames = set(OrderedDict.fromkeys(
+		all_CG.residues.resnames))
+
+	cg_resnames = cg_resnames & set(lipids.keys())
+	aa_resnames = set()
+	for cg_resname in cg_resnames:
+		aa_resnames.add(lipids[cg_resname][0])
+
+	####################################################
+	###### Write top files and other files set-up  #####
+	####################################################
+	
+	if args.tt is None:
+		os.system("cp "+BaseDir+"/files/aa_lipid.top.template aa_lipid.top")
+
+	include_itps("aa_lipid.top",aa_resnames,BaseDir,args)
+	os.system("sed -i 's|\"./files|\""+BaseDir+"/files|g' aa_lipid.top")
+	
+	fin_top=open(input_top,"r")
+	fout=open("aa_lipid.top","a")
+	start_read = 0
+	n_moltypes = 0
+	for line in fin_top:
+		if "[ molecules ]" in line:
+			start_read=1
+			continue
+		if start_read:
+			data=line.strip().split()
+			if len(data) and not line.startswith(";"):
+				if (data[0]!="W" and data[0]!="WF" and 
+					data[0]!="NA" and data[0]!="Na" and 
+					data[0]!="NA+" and data[0]!="Na+" and 
+					data[0]!="CL" and data[0]!="Cl" and 
+					data[0]!="CL-" and data[0]!="Cl-"):
+					if args.pi is None:
+						fout.write(line)
+						n_moltypes += 1
+					elif data[0] not in prot_molnames:
+						fout.write(line)
+						n_moltypes += 1
+	if start_read != 1:
+		raise RuntimeError('"[ molecules ]" directive in cg topology not found.')
+	fout.write("\n")
+	fout.close()
+	fin_top.close()
+
+	if n_moltypes > 0:
+		align_lipids(BaseDir,args,lipids,all_lipids,all_CG)
+	else:
+		subprocess.call("cat "+args.pdbfile+" | grep CRYST > full_system.pdb",shell=True)
 
 	##############################
 	##     PROTEIN ALIGNMENT    ##
