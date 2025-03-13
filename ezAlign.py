@@ -239,9 +239,11 @@ def write_full_top(args,prot_molnames,prot_itps,
 		buff = myfile.read()
 	j = buff.index('[ system ]')
 	bufflist = [buff[:j]]
+	prot_itps_listed = set()
 	for prot_itp in prot_itps:
-		bufflist.append('#include "{:s}"\n'.format(prot_itp))
-		# NOTE: this doesn't support duplicate .itps
+		if prot_itp not in prot_itps_listed:
+			bufflist.append('#include "{:s}"\n'.format(prot_itp))
+			prot_itps_listed.add(prot_itp)
 	bufflist.append('\n')
 	bufflist.append(buff[j:])
 	if args.pi is not None:
